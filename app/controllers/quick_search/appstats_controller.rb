@@ -7,9 +7,28 @@ module QuickSearch
 
     ########################## ADDED #############################
     def data
+      serves = Event.where(date_range).group(:action).order("count_category DESC").count(:category)
+      clicks = Event.where(date_range).group(:action).count(:category)
+
+      result = []
+      serves.each do |data, count|
+        unless clicks[data].nil?
+          click_count = clicks[data]
+        else
+          click_count = 0
+        end
+
+        row = {"action" => data,
+          "servecount" => count,
+          "clickcount" => click_count,
+          "click_serve_ratio" => (click_count/count)*100 }
+        result << row
+      end
+
       respond_to do |format|
         format.json {
-          render :json => [1,2,3,4,5]
+          # render :json => [1,2,3,4,5]
+          render :json => result
         }
       end
     end
