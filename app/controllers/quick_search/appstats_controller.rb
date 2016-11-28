@@ -4,6 +4,17 @@ module QuickSearch
 
     before_action :auth, :start_date, :end_date, :days_in_sample
 
+
+    ########################## ADDED #############################
+    def data
+      respond_to do |format|
+        format.json {
+          render :json => [1,2,3,4,5]
+        }
+      end
+    end
+    ##############################################################
+
     def index
       @page_title = 'Search Statistics'
       search_click_ratio

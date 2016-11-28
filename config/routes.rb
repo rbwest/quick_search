@@ -31,7 +31,7 @@ QuickSearch::Engine.routes.draw do
   #get 'graph/index'
   #get 'graph/data', :defaults => { :format => 'json' }
 
-  get 'graph/data', :defaults => { :format => 'json' }
+  get 'appstats/data', :defaults => { :format => 'json' }
 
   ##############################################################
 
