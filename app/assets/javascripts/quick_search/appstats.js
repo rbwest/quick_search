@@ -22,44 +22,53 @@ $.ajax({
        });
 
 function draw(data) {
-  var data = [1,2,3,4,5];
-  var svg = d3.select("#genGraph"),
-      margin = {top: 20, right: 20, bottom: 30, left: 40},
-      width = +svg.attr("width") - margin.left - margin.right,
-      height = +svg.attr("height") - margin.top - margin.bottom;
+	console.log(data);
+	var svg = d3.select("#genGraph"),
+	    margin = {top: 20, right: 20, bottom: 20, left: 20},
+	    width = +svg.attr("width") - margin.left - margin.right,
+	    height = +svg.attr("height") - margin.top - margin.bottom;
 
-  var x = d3.scaleLinear().rangeRound([0, width]),
-      y = d3.scaleLinear().rangeRound([height, 0]);
+	var x = d3.scaleLinear().rangeRound([0, width]),
+	    y = d3.scaleLinear().rangeRound([0, height])
+	    yL = d3.scaleLinear().rangeRound([0, height + 25]);
 
-  var g = svg.append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	var g = svg.append("g")
+	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  x.domain([0, d3.max(data, function(d) { return d; })]);
-  y.domain([0, d3.max(data, function(d) { return d; })]);
+	  x.domain([0, d3.max(data, function(d) { return d.clickcount; })]);
+	  y.domain([0, d3.max(data, function(d , i) { return i; })]);
 
-  g.append("g")
-    .attr("class", "axis axis--x")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x).ticks(5));
+	// g.append("g")
+	//   .attr("class", "axis axis--x")
+	//   .attr("transform", "translate(0," + height + ")")
+	//   .call(d3.axisBottom(x).ticks(7));
 
-  g.append("g")
-    .attr("class", "axis axis--y")
-    .call(d3.axisLeft(y).ticks(5))
-  .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 6)
-    .attr("dy", "0.71em")
-    .attr("text-anchor", "end")
-    .text("Frequency");
+	g.append("g")
+	  .attr("class", "axis axis--y")
+	  .attr("transform", "translate(" + 100 + "," + 0 + ")")
+      .call(d3.axisLeft(yL).ticks(0));
+	//   .append("text")
+	//   .attr("transform", "rotate(-90)")
+	//   .attr("y", 6)
+	//   .attr("dy", "0.71em")
+	//   .attr("text-anchor", "end")
+	//   .text("Frequency");
 
-  g.selectAll(".bar")
-  .data(data)
-  .enter().append("rect")
-    .attr("class", "bar")
-    .attr("x", function(d) { return x(d)-50; })
-    .attr("y", function(d) { return y(d); })
-    .attr("width", 50)
-    .attr("height", function(d) { return height - y(d); });
+	g.selectAll(".bar")
+	.data(data)
+	.enter().append("rect")
+	  .attr("class", "bar")
+	  .attr("x", 100 )
+	  .attr("y", function(d , i) { return y(i); })
+	  .attr("width", function(d) { return x(d.clickcount); })
+	  .attr("height", 25 );
+
+	g.selectAll(".label")
+	  .data(data)
+	  .enter().append("text")
+	  .text( function (d) { return d.action })
+	  .attr("x" , 5)
+	  .attr("y" , function (d , i) { return y(i) + 15; });
 }
 
 function error() {
