@@ -1,8 +1,3 @@
-<h1>HI FROM SAMPLE</h1>
-<svg id="genGraph" width="400" height="200"></svg>
-
-<script>
-
 console.log("In graph.js");
 $.ajax({
            type: "GET",
@@ -62,5 +57,3 @@ function draw(data) {
 function error() {
     console.log("error")
 }
-
-</script>
