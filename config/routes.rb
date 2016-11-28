@@ -26,10 +26,6 @@ QuickSearch::Engine.routes.draw do
   get 'appstats/realtime' => 'appstats#realtime'
 
   ########################## ADDED #############################
-  
-  # FROM TUTORIAL
-  #get 'graph/index'
-  #get 'graph/data', :defaults => { :format => 'json' }
 
   get 'appstats/data', :defaults => { :format => 'json' }
 
