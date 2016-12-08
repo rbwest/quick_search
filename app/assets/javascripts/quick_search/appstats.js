@@ -1,5 +1,6 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
+console.log("In appstats.js")
 
 $(function () {
   $('#appstats-date-showhide').click(function () {
@@ -11,7 +12,7 @@ $(function () {
 $(function() { $.ajax({
            type: "GET",
            contentType: "application/json; charset=utf-8",
-           url: 'appstats/data',
+           url: 'appstats/data_module_clicks',
            dataType: 'json',
            success: function (data) {
                draw(data);
@@ -24,7 +25,7 @@ $(function() { $.ajax({
 
 function draw(data) {
 	console.log(data);
-	var svg = d3.select("#genGraph"),
+	var svg = d3.select("#sample_graph"),
 	    margin = {top: 20, right: 20, bottom: 20, left: 20},
 	    width = +svg.attr("width") - margin.left - margin.right,
 	    height = +svg.attr("height") - margin.top - margin.bottom
@@ -37,13 +38,13 @@ function draw(data) {
 	var g = svg.append("g")
 	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	  x.domain([0, d3.max(data, function(d) { return d.clickcount; })]);
-	  y.domain([0, d3.max(data, function(d , i) { return i; })]);
+	x.domain([0, d3.max(data, function(d) { return d.clickcount; })]);
+	y.domain([0, d3.max(data, function(d , i) { return i; })]);
 
-	 g.append("g")
-	   .attr("class", "axis axis--x")
-	   .attr("transform", "translate(" + labelWidth + ",50)")
-	   .call(d3.axisTop(x).ticks( d3.max(data, function(d) { return d.clickcount; })) );
+	g.append("g")
+	  .attr("class", "axis axis--x")
+	  .attr("transform", "translate(" + labelWidth + ",50)")
+	  .call(d3.axisTop(x).ticks(9));
 
 	g.append("g")
 	  .attr("class", "axis axis--y")
