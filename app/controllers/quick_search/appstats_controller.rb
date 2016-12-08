@@ -88,18 +88,18 @@ module QuickSearch
     private
 
     def module_clicks
-      @module_clicks = Event.where(date_range).where(excluded_categories).group(:category).order("count_category DESC").count(:category)
+      @module_clicks = Event.where(date_range).where(excluded_categories).where(:action => 'click').group(:category).order("count_category DESC").count(:category)
       @module_click_total = calculate_total_clicks(@module_clicks)
     end
 
     def typeahead_clicks
       searches_count
-      @typeahead_clicks = Event.where(date_range).where("category LIKE 'typeahead-%'").group(:category).order("count_category DESC").count(:category)
+      @typeahead_clicks = Event.where(date_range).where("category LIKE 'typeahead-%'").where(:action => 'click').group(:category).order("count_category DESC").count(:category)
       @typeahead_clicks_total = calculate_total_clicks(@typeahead_clicks)
     end
 
     def result_types_clicks
-      @result_types_clicks = Event.where(date_range).where(:category => "result-types").group(:action).order("count_action DESC").count(:action)
+      @result_types_clicks = Event.where(date_range).where(:category => "result-types").where(:action => 'click').group(:item).order("count_item DESC").count(:item)
       @result_types_click_total = calculate_total_clicks(@result_types_clicks)
     end
 
@@ -118,7 +118,7 @@ module QuickSearch
 
     def search_click_ratio
       searches_count
-      @clicks_count = Event.where(excluded_categories).where(date_range).count
+      @clicks_count = Event.where(excluded_categories).where(:action => 'click').where(date_range).count
       @click_serve_ratio = (@clicks_count / @searches_count.to_f)*100
     end
 
@@ -139,7 +139,7 @@ module QuickSearch
     end
 
     def module_click_detail(category)
-       modules_clicks = Event.where(:category => "#{category}").where(date_range).group(:action).order('count_category DESC').count(:category)
+       modules_clicks = Event.where(:category => category).where(:action => 'click').where(date_range).group(:item).order('count_category DESC').count(:category)
        total_clicks = modules_clicks.values.sum
        @modules_clicks_report = []
        modules_clicks.each do |module_clicks|
@@ -147,25 +147,25 @@ module QuickSearch
       end
     end
 
-    def top_spot_detail(category, action)
+    def top_spot_detail(category, item)
       # Use a join here?
-      action = URI.decode(action)
-      serves = Event.where(:category => "#{category}-serve", :action => "#{action}").where(date_range).group(:label).order("count_label DESC").count(:label)
-      clicks = Event.where(:category => "#{category}", :action => "#{action}").where(date_range).group(:label).order("count_label DESC").count(:label)
+      item = URI.decode(item)
+      serves = Event.where(:category => category, :action => 'serve', :item => item).where(date_range).group(:query).order("count_query DESC").count(:query)
+      clicks = Event.where(:category => category, :action => 'click', :item => item).where(date_range).group(:query).order("count_query DESC").count(:query)
 
       @top_spot_detail = {}
 
 
-      serves.each do |label|
-        serve_count = label[1].nil? ? 0:label[1]
-        click_count = clicks[label[0].downcase].nil? ? 0:clicks[label[0].downcase]
-        @top_spot_detail[label[0]] = [serve_count, click_count, (click_count/serve_count.to_f)*100]
+      serves.each do |query|
+        serve_count = query[1].nil? ? 0:query[1]
+        click_count = clicks[query[0].downcase].nil? ? 0:clicks[query[0].downcase]
+        @top_spot_detail[query[0]] = [serve_count, click_count, (click_count/serve_count.to_f)*100]
       end
     end
 
     def base_query(category)
-      serves = Event.where(date_range).where(:category => "#{category}-serve").group(:action).order("count_category DESC").count(:category)
-      clicks = Event.where(date_range).where(:category => "#{category}").group(:action).count(:category)
+      serves = Event.where(date_range).where(:category => category, :action => 'serve').group(:item).order("count_category DESC").count(:category)
+      clicks = Event.where(date_range).where(:category => category, :action => 'click').group(:item).count(:category)
 
       result = []
       serves.each do |data, count|
@@ -229,7 +229,7 @@ module QuickSearch
     end
 
     def excluded_categories
-      "category NOT LIKE \"%serve\" AND category <> \"common-searches\" AND category <> \"result-types\"AND category NOT LIKE \"typeahead-%\""
+      "category <> \"common-searches\" AND category <> \"result-types\"AND category NOT LIKE \"typeahead-%\""
     end
 
     def date_range

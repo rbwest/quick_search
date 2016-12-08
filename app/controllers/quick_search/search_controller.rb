@@ -114,28 +114,6 @@ module QuickSearch
       end
     end
 
-    def log_search
-      if params[:query].present? && params[:page].present?
-        Search.create(query: params[:query], page: params[:page])
-        head :ok
-      else
-        head :bad_request
-      end
-    end
-
-    def log_event
-      if params[:category].present? && params[:event_action].present? && params[:label].present?
-        Event.create(category: params[:category], action: params[:event_action], label: params[:label][0..250])
-        if params[:callback].present?
-          head :ok, content_type: 'text/javascript'
-        else
-          head :ok
-        end
-      else
-        head :bad_request
-      end
-    end
-
     private
 
     def http_search(endpoint = 'defaults', page_to_render = :index)
@@ -238,6 +216,7 @@ module QuickSearch
       result
     end
 
+    # TODO: move this --- is this necessary?
     def log_query
       if search_in_params?
         @log_query = filter_query(params_q_scrubbed)

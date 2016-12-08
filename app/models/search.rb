@@ -1,4 +1,6 @@
 class Search < ApplicationRecord
+
+  belongs_to :session
   
   def self.get_most_frequent_searches
     frequent_searches = []

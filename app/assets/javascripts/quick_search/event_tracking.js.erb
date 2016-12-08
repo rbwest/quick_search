@@ -53,7 +53,7 @@ var quickSearchEventTracking = (function () {
     function checkForServes(val) {
         var link = $(val).find('a');
         var eventValuesDefined = eventValues(link);
-        eventValuesDefined.category = eventValuesDefined.category + '-serve';
+        eventValuesDefined.action_type = 'serve';
         sendEventData(eventValuesDefined, '');
     }
 
@@ -67,6 +67,7 @@ var quickSearchEventTracking = (function () {
         ga_event.category = eventCategory(link);
         ga_event.action = eventAction(link);
         ga_event.label = eventLabel(link);
+	ga_event.action_type = 'click';
         return ga_event;
     }
 
@@ -160,7 +161,8 @@ var quickSearchEventTracking = (function () {
                 document.location = link;
             }
         }]);
-        _gaq.push(['_trackEvent', eventValues.category, eventValues.action, eventValues.label]);
+        var category = eventValues.action_type == 'serve' ? eventValues.category + '-serve' : eventValues.category;
+        _gaq.push(['_trackEvent', category, eventValues.action, eventValues.label]);
     }
 
     function logEventToDatabase(eventValues) {
@@ -172,7 +174,8 @@ var quickSearchEventTracking = (function () {
             data: {
                 category: eventValues.category,
                 event_action: eventValues.action,
-                label: eventValues.label
+                label: eventValues.label,
+                action_type: eventValues.action_type
             }
         });
     }

@@ -3,8 +3,8 @@ QuickSearch::Engine.routes.draw do
   root 'search#index'
 
   get 'xhr_search' => 'search#xhr_search', :defaults => { :format => 'html' }
-  get 'log_event' => 'search#log_event'
-  get 'log_search' => 'search#log_search'
+  get 'log_event' => 'logging#log_event'
+  get 'log_search' => 'logging#log_search'
   get 'typeahead' => 'typeahead#typeahead'
 
   get 'searcher/:searcher_name' => 'search#single_searcher'
