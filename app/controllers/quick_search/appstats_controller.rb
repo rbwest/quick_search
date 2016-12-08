@@ -7,7 +7,7 @@ module QuickSearch
 
     ########################## ADDED #############################
     def data
-      serves = Event.where(date_range).group(:action).order("count_category DESC").count(:category)
+      serves = Event.where(date_range).group(:action).count(:category)
       clicks = Event.where(date_range).group(:action).count(:category)
 
       result = []
@@ -27,7 +27,24 @@ module QuickSearch
 
       respond_to do |format|
         format.json {
-          # render :json => [1,2,3,4,5]
+          render :json => result
+        }
+      end
+    end
+
+    def data_module_clicks
+      events = Event.where(date_range).where(excluded_categories).where(:action => 'click').group(:category).order("count_category DESC").count(:category)
+
+      result = []
+      events.each do |data|
+
+        row = {"action" => data[0],
+               "clickcount" => data[1]}
+        result << row
+      end
+
+      respond_to do |format|
+        format.json {
           render :json => result
         }
       end
