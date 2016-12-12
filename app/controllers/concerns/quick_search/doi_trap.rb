@@ -8,7 +8,7 @@ module QuickSearch::DoiTrap
   def doi_trap
     unless params_q_scrubbed.nil?
       if is_a_doi?(doi_query)
-        Event.create(category: 'doi-trap', action: doi_query, label: '')
+        Event.create(category: 'doi-trap', query: doi_query, action: 'click')
         redirect_to doi_loaded_link
         # Alternately insert a loaded link into the results interface
         # @doi_loaded_link = loaded_link

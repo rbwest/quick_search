@@ -1,6 +1,11 @@
 class Search < ApplicationRecord
 
   belongs_to :session
+
+  before_create do
+    self.created_at_string = DateTime.now.strftime("%Y-%m-%d")
+  end
+
   
   def self.get_most_frequent_searches
     frequent_searches = []
