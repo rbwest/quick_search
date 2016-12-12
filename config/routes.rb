@@ -29,6 +29,7 @@ QuickSearch::Engine.routes.draw do
 
   get 'appstats/data', :defaults => { :format => 'json' }
   get 'appstats/data_module_clicks', :defaults => { :format => 'json' }
+  get 'appstats/data_result_clicks', :defaults => { :format => 'json' }
 
   ##############################################################
 

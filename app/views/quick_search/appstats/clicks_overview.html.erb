@@ -13,6 +13,9 @@
 
         <h2>Result Types Guide Clicks</h2>
         <%= render partial: 'click_count_table', locals: { :clicks => @result_types_clicks, :total_clicks => @result_types_click_total} %>
+
+        <%= render partial: 'graph_result_clicks' %>
+
         <table>
             <tr>
                 <td>Result Type Guide Click/Search</td>
