@@ -7,7 +7,7 @@ module QuickSearch
 
     ########################## ADDED #############################
     def data
-      clicks = Event.where(date_range).where(:action => 'click').group(:created_at).order("count_category DESC").count(:category)
+      clicks = Event.where(date_range).where(:action => 'click').group(:created_at).order("created_at ASC").count(:created_at)
 
       result = []
       clicks.each do |data , count|
