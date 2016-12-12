@@ -12,7 +12,7 @@ $(function () {
 $(function() { $.ajax({
            type: "GET",
            contentType: "application/json; charset=utf-8",
-           url: 'appstats/data_module_clicks',
+           url: 'appstats/data',
            dataType: 'json',
            success: function (data) {
                draw(data);
