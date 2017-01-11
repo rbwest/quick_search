@@ -7,15 +7,47 @@ module QuickSearch
 
     ########################## ADDED #############################
     def data
-      clicks = Event.where(date_range).where(:action => 'click').group(:created_at).order("created_at ASC").count(:created_at)
-
       result = []
+
+      clicks = Event.where(date_range).where(:action => 'click').group(:created_at_string).order("created_at_string ASC").count(:created_at_string)
+      clicksSub = []
       clicks.each do |data , count|
 
-        row = { "data" => data ,
+        row = { "date" => data ,
                 "count" => count}
-        result << row
+        clicksSub << row
       end
+      result << clicksSub
+
+      serves = Event.where(date_range).where(:action => 'serve').group(:created_at_string).order("created_at_string ASC").count(:created_at_string)
+      servesSub = []
+      serves.each do |data , count|
+
+        row = { "date" => data ,
+                "count" => count}
+        servesSub << row
+      end
+      result << servesSub
+
+      sessions = Session.where(date_range).group(:created_at_string).order("created_at_string ASC").count(:created_at_string)
+      sessionsSub = []
+      sessions.each do |data , count|
+
+        row = { "date" => data ,
+                "count" => count}
+        sessionsSub << row
+      end
+      result << sessionsSub
+
+      searches = Search.where(date_range).group(:created_at_string).order("created_at_string ASC").count(:created_at_string)
+      searchesSub = []
+      searches.each do |data , count|
+
+        row = { "date" => data ,
+                "count" => count}
+        searchesSub << row
+      end
+      result << searchesSub
 
       respond_to do |format|
         format.json {

@@ -1,123 +1,403 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
-console.log("In appstats.js")
+(function() {
+  console.log("In appstats.js")
 
-$(function () {
-  $('#appstats-date-showhide').click(function () {
-    $('#appstats-date-filter').toggle();
+  $(function () {
+    $('#appstats-date-showhide').click(function () {
+      $('#appstats-date-filter').toggle();
+    });
   });
-});
 
 
-$('document').ready(function() {
-    if($('#sample_graph').length){
+  $('document').ready(function() {
+      if($('#sample_graph').length){
+      $.ajax({
+          type: "GET",
+          contentType: "application/json; charset=utf-8",
+          url: 'appstats/data',
+          dataType: 'json',
+          success: function (sampleDataSet) {
+            var dataMain = _.cloneDeep(sampleDataSet);
+            var dataMini = _.cloneDeep(sampleDataSet);
+
+            draw_line_graph(dataMain, false , 0);
+
+            draw_mini_graph(dataMini[0] , "#mini0");
+            document.getElementById("mini0").addEventListener("click" , function() { load_new_data(0); });
+            document.getElementById("mini0").addEventListener("mouseover" , function() { d3.select("#mini0").select(".areaMini").style("fill" , "lightsteelblue"); });
+            document.getElementById("mini0").addEventListener("mouseout" , function() { d3.select("#mini0").select(".areaMini").style("fill" , "steelblue"); });
+            draw_mini_graph(dataMini[1] , "#mini1");
+            document.getElementById("mini1").addEventListener("click" , function() { load_new_data(1); });
+            document.getElementById("mini1").addEventListener("mouseover" , function() { d3.select("#mini1").select(".areaMini").style("fill" , "lightsteelblue"); });
+            document.getElementById("mini1").addEventListener("mouseout" , function() { d3.select("#mini1").select(".areaMini").style("fill" , "steelblue"); });
+            draw_mini_graph(dataMini[2] , "#mini2");
+            document.getElementById("mini2").addEventListener("click" , function() { load_new_data(2); });
+            document.getElementById("mini2").addEventListener("mouseover" , function() { d3.select("#mini2").select(".areaMini").style("fill" , "lightsteelblue"); });
+            document.getElementById("mini2").addEventListener("mouseout" , function() { d3.select("#mini2").select(".areaMini").style("fill" , "steelblue"); });
+            draw_mini_graph(dataMini[3] , "#mini3");
+            document.getElementById("mini3").addEventListener("click" , function() { load_new_data(3); });
+            document.getElementById("mini3").addEventListener("mouseover" , function() { d3.select("#mini3").select(".areaMini").style("fill" , "lightsteelblue"); });
+            document.getElementById("mini3").addEventListener("mouseout" , function() { d3.select("#mini3").select(".areaMini").style("fill" , "steelblue"); });
+          },
+          error: function (result) {
+             error();
+          }
+      });
+    }
+    if($('#module_clicks_graph').length){
+      $.ajax({
+          type: "GET",
+          contentType: "application/json; charset=utf-8",
+          url: 'data_module_clicks',
+          dataType: 'json',
+          success: function (moduleDataSet) {
+            var moduleData = _.cloneDeep(moduleDataSet);
+            draw_table_graph(moduleData , "#module_clicks_graph");
+          },
+          error: function (result) {
+             error();
+          }
+      });
+    }
+    if($('#result_clicks_graph').length){
+      $.ajax({
+          type: "GET",
+          contentType: "application/json; charset=utf-8",
+          url: 'data_result_clicks',
+          dataType: 'json',
+          success: function (resultDataSet) {
+            var resultData = _.cloneDeep(resultDataSet);
+            draw_table_graph(resultData , "#result_clicks_graph");
+          },
+          error: function (result) {
+             error();
+          }
+      });
+    }
+  });
+
+
+  function load_new_data(index) {
     $.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
-        url: 'data',
+        url: 'appstats/data',
         dataType: 'json',
-        success: function (data) {
-           draw_sample_graph(data);
+        success: function (updateDataSet) {
+          var updateData = _.cloneDeep(updateDataSet);
+          draw_line_graph(updateData , true , index);
         },
         error: function (result) {
            error();
         }
     });
   }
-  if($('#module_clicks_graph').length){
-    $.ajax({
-        type: "GET",
-        contentType: "application/json; charset=utf-8",
-        url: 'data_module_clicks',
-        dataType: 'json',
-        success: function (data) {
-           draw_table_graph(data , "#module_clicks_graph");
-        },
-        error: function (result) {
-           error();
-        }
+
+  function draw_mini_graph(dataShared , id) {
+    console.log("In mini graph.");
+    var svg = d3.select(id),
+        dataInt = dataShared,
+        margin = {top: 5, right: 5, bottom: 5, left: 5}
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        title = "";
+    if (id=="#mini0") { title="Clicks"; }
+    if (id=="#mini1") { title="Serves"; }
+    if (id=="#mini2") { title="Sessions"; }
+    if (id=="#mini3") { title="Searches"; }
+
+    var parseDate = d3.timeParse("%Y-%m-%d");
+
+    dataInt.forEach( function (d) { 
+      d.date = parseDate(d.date);
     });
+
+    var x = d3.scaleTime().range([0, width]),
+        y = d3.scaleLinear().range([height, 0]);
+
+    x.domain(d3.extent(dataInt, function(d) { return d.date; }));
+    y.domain([0, d3.max(dataInt, function(d) { return d.count; })]);
+
+    var xAxis = d3.axisBottom(x),
+        yAxis = d3.axisLeft(y);
+
+    xAxis.tickSizeOuter(0);
+    yAxis.tickSizeOuter(0);
+
+    var area = d3.area()
+      .curve(d3.curveMonotoneX)
+      .x(function(d) { return x(d.date); })
+      .y0(height)
+      .y1(function(d) { return y(d.count); });
+
+    svg.append("defs").append("clipPath")
+      .attr("id", "clipMini")
+    .append("rect")
+      .attr("width", width)
+      .attr("height", height);
+
+    var focus = svg.append("g")
+      .attr("class", "focus")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    focus.append("path")
+        .datum(dataInt)
+        .attr("class", "areaMini")
+        .attr("d", area);
+
+    focus.append("text")
+        .text(title)
+        .attr("class" , "chartTitle")
+        .attr("transform", "translate(" + (width/2) + "," + (height/2) + ")");
+
+    focus.append("g")
+        .attr("class", "xAxis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis.ticks(0));
+
+    focus.append("g")
+        .attr("class", "yAxis")
+        .call(yAxis.ticks(0));
   }
-  if($('#result_clicks_graph').length){
-    $.ajax({
-        type: "GET",
-        contentType: "application/json; charset=utf-8",
-        url: 'data_result_clicks',
-        dataType: 'json',
-        success: function (data) {
-           draw_table_graph(data , "#result_clicks_graph");
-        },
-        error: function (result) {
-           error();
-        }
+
+  function draw_line_graph(dataShared , transitioning , index) {
+    console.log("In line graph.");
+    var transitioning = transitioning;
+    var svg = d3.select("#sample_graph"),
+        dataInt = dataShared[index],
+        margin = {top: 20, right: 20, bottom: 110, left: 40},
+        margin2 = {top: 430, right: 20, bottom: 30, left: 40},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        height2 = +svg.attr("height") - margin2.top - margin2.bottom,
+        titles = ["Clicks" , "Serves" , "Sessions" , "Searches"];
+
+    var parseDate = d3.timeParse("%Y-%m-%d");
+
+    dataInt.forEach( function (d) { 
+      d.date = parseDate(d.date);
     });
+
+    var x = d3.scaleTime().range([0, width]),
+        x2 = d3.scaleTime().range([0, width]),
+        y = d3.scaleLinear().range([height, 0]),
+        y2 = d3.scaleLinear().range([height2, 0]);
+
+    x.domain(d3.extent(dataInt, function(d) { return d.date; }));
+    y.domain([0, d3.max(dataInt, function(d) { return d.count; })]);
+    x2.domain(x.domain());
+    y2.domain(y.domain());
+
+    var xAxis = d3.axisBottom(x),
+        xAxis2 = d3.axisBottom(x2),
+        yAxis = d3.axisLeft(y);
+
+    var brush = d3.brushX()
+        .extent([[0, 0], [width, height2]])
+        .on("brush end", brushed);
+
+    var zoom = d3.zoom()
+        .scaleExtent([1, 1000])
+        .translateExtent([[0, 0], [width, height]])
+        .extent([[0, 0], [width, height]])
+        .on("zoom", zoomed);
+
+    var area = d3.area()
+        .curve(d3.curveMonotoneX)
+        .x(function(d) { return x(d.date); })
+        .y0(height)
+        .y1(function(d) { return y(d.count); });
+
+    var area2 = d3.area()
+        .curve(d3.curveMonotoneX)
+        .x(function(d) { return x2(d.date); })
+        .y0(height2)
+        .y1(function(d) { return y2(d.count); });
+
+    if(!transitioning) {
+      svg.append("defs").append("clipPath")
+        .attr("id", "clip")
+      .append("rect")
+        .attr("width", width)
+        .attr("height", height);
+
+      var focus = svg.append("g")
+        .attr("class", "focus")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var context = svg.append("g")
+        .attr("class", "context")
+        .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+      focus.append("path")
+          .datum(dataInt)
+          .attr("class", "area")
+          .attr("d", area);
+
+      focus.append("g")
+          .attr("class", "xAxis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+      focus.append("g")
+          .attr("class", "yAxis")
+          .call(yAxis);
+
+      focus.append("text")
+          .text(titles[index])
+          .attr("class" , "chartTitle")
+          .attr("transform", "translate(" + (width/2) + "," + 30 + ")");
+
+      context.append("path")
+          .datum(dataInt)
+          .attr("class", "area")
+          .attr("d", area2);
+
+      context.append("g")
+          .attr("class", "xAxis2")
+          .attr("transform", "translate(0," + height2 + ")")
+          .call(xAxis2);
+    }
+    else {
+      svg.select(".xAxis") // change the x axis
+          .transition()
+          .duration(750)
+          .call(xAxis);
+      svg.select(".xAxis2") // change the x axis
+          .transition()
+          .duration(750)
+          .call(xAxis2);
+      svg.select(".yAxis") // change the y axis
+          .transition()
+          .duration(750)
+          .call(yAxis);
+      svg.select(".chartTitle") // change the y axis
+          .transition()
+          .duration(750)
+          .text(titles[index]);
+      svg.select(".focus").select(".area")
+          .datum(dataInt)
+          .transition()
+          .duration(750)
+          .attr("d", area);
+      svg.select(".context").select(".area")
+          .datum(dataInt)
+          .transition()
+          .duration(750)
+          .attr("d", area2);
+      setTimeout(function() {transitioning=false} , 50);
+      svg.select(".brush").remove();
+      svg.select(".zoom").remove();
+    }
+
+    focus = svg.select(".focus");
+    context = svg.select(".context");
+
+    context.append("g")
+      .attr("class", "brush")
+      .call(brush)
+      .call(brush.move, x.range());
+
+    svg.append("rect")
+      .attr("class", "zoom")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      .call(zoom);
+
+    function brushed() {
+      if (!transitioning) {
+        if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return;
+        var s = d3.event.selection || x2.range();
+        x.domain(s.map(x2.invert, x2));
+        focus.select(".area").attr("d", area);
+        focus.select(".xAxis").call(xAxis);
+        svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
+            .scale(width / (s[1] - s[0]))
+            .translate(-s[0], 0));
+      }
+    }
+
+    function zoomed() {
+      if (!transitioning) {
+        if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return;
+        var t = d3.event.transform;
+        x.domain(t.rescaleX(x2).domain());
+        focus.select(".area").attr("d", area);
+        focus.select(".xAxis").call(xAxis);
+        context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+      }
+    }
+
+    function type(d) {
+      d.date = parseDate(d.date);
+      console.log(d.date);
+      d.count = +d.count;
+      return d;
+    }
   }
-});
 
+  function draw_table_graph(dataShared , id) {
+    console.log("In table graph.");
+  	var svg = d3.select(id),
+        dataInt = dataShared,
+  	    margin = {top: 20, right: 20, bottom: 20, left: 20},
+  	    width = +svg.attr("width") - margin.left - margin.right,
+  	    height = +svg.attr("height") - margin.top - margin.bottom
+  	    labelWidth = 100;
 
+  	var x = d3.scaleLinear().rangeRound([0, width - margin.left - margin.right - labelWidth]),
+  	    y = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom - 26])
+  	    yL = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom]);
 
-function draw_sample_graph(data) {
-	//console.log(data);
-}
+  	var g = svg.append("g")
+  	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-function draw_table_graph(data , id) {
-	//console.log(data);
-	var svg = d3.select(id),
-	    margin = {top: 20, right: 20, bottom: 20, left: 20},
-	    width = +svg.attr("width") - margin.left - margin.right,
-	    height = +svg.attr("height") - margin.top - margin.bottom
-	    labelWidth = 100;
+  	x.domain([0, d3.max(dataInt, function(d) { return d.clickcount; })]);
+  	y.domain([0, d3.max(dataInt, function(d , i) { return i; })]);
 
-	var x = d3.scaleLinear().rangeRound([0, width - margin.left - margin.right - labelWidth]),
-	    y = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom - 26])
-	    yL = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom]);
+  	g.append("g")
+  	  .attr("class", "axis axis--x")
+  	  .attr("transform", "translate(" + labelWidth + ",50)")
+  	  .call(d3.axisTop(x).ticks(9));
 
-	var g = svg.append("g")
-	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	x.domain([0, d3.max(data, function(d) { return d.clickcount; })]);
-	y.domain([0, d3.max(data, function(d , i) { return i; })]);
-
-	g.append("g")
-	  .attr("class", "axis axis--x")
-	  .attr("transform", "translate(" + labelWidth + ",50)")
-	  .call(d3.axisTop(x).ticks(9));
-
-	g.append("g")
-	  .attr("class", "axis axis--y")
-	  .attr("transform", "translate(" + labelWidth + ",50)")
+  	g.append("g")
+  	  .attr("class", "axis axis--y")
+  	  .attr("transform", "translate(" + labelWidth + ",50)")
       .call(d3.axisLeft(yL).ticks(0));
 
-	g.append("g")
-	  .attr("class" , "data bars")
-	  .attr("transform", "translate(" + (labelWidth+2) + ",52)")
-	  .selectAll(".bar")
-	  .data(data)
-	  .enter().append("rect")
-	  .attr("class", "bar")
-	  .attr("x", 0 )
-	  .attr("y", function(d , i) { return y(i); })
-	  .attr("width", function(d) { return x(d.clickcount); })
-	  .attr("height", 25 );
+  	g.append("g")
+  	  .attr("class" , "data bars")
+  	  .attr("transform", "translate(" + (labelWidth+2) + ",52)")
+  	  .selectAll(".bar")
+  	  .data(dataInt)
+  	  .enter().append("rect")
+  	  .attr("class", "bar")
+  	  .attr("x", 0 )
+  	  .attr("y", function(d , i) { return y(i); })
+  	  .attr("width", function(d) { return x(d.clickcount); })
+  	  .attr("height", 25 );
 
-	g.append("g")
-	  .attr("class" , "labels labels--x")
-	  .attr("transform", "translate(" + (width/2 - 14) + ",30)")
-	  .append("text")
-	  .text("Click Count");
+  	g.append("g")
+  	  .attr("class" , "labels labels--x")
+  	  .attr("transform", "translate(" + (width/2 - 14) + ",30)")
+  	  .append("text")
+  	  .text("Click Count");
 
-	g.append("g")
-	  .attr("class" , "labels labels--y")
-	  .attr("transform", "translate(0,50)")
-	  .selectAll(".label")
-	  .data(data)
-	  .enter().append("text")
-	  .text( function (d) { return d.action })
-	  .attr("x" , 5)
-	  .attr("y" , function (d , i) { return y(i) + 15; });
-}
+  	g.append("g")
+  	  .attr("class" , "labels labels--y")
+  	  .attr("transform", "translate(0,50)")
+  	  .selectAll(".label")
+  	  .data(dataInt)
+  	  .enter().append("text")
+  	  .text( function (d) { return d.action })
+  	  .attr("x" , 5)
+  	  .attr("y" , function (d , i) { return y(i) + 15; });
+  }
 
-function error() {
-    console.log("error")
-}
-/////////////////////////////////////////////////////
+  function error() {
+      console.log("error")
+  }
+  /////////////////////////////////////////////////////
+})();

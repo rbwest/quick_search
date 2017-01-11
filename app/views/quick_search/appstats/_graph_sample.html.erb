@@ -1,10 +1,42 @@
 <style>
-.bar {
+
+.area {
   fill: steelblue;
+  clip-path: url(#clip);
 }
-.bar:hover {
-  fill: lightsteelblue;
+
+.areaMini {
+  fill: steelblue;
+  clip-path: url(#clipMini);
 }
+
+.chartTitle {
+	text-anchor: middle;
+	fill: 	#333333;
+	font-size: 30px;
+	font-family: "Lucida Console";
+}
+
+.zoom {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
+}
+
+.mini_graph {
+    float: left;
+}
+
+.clearfix{
+    clear:both
+}
+
 </style>
 
-<svg id="sample_graph" width="700" height="350"></svg>
+<svg id="sample_graph" width="960" height="500"></svg>
+
+<svg class="mini_graph" id="mini0" width="240" height="200"></svg>
+<svg class="mini_graph" id="mini1" width="240" height="200"></svg>
+<svg class="mini_graph" id="mini2" width="240" height="200"></svg>
+<svg class="mini_graph" id="mini3" width="240" height="200"></svg>
+<div class="clearfix"></div>
