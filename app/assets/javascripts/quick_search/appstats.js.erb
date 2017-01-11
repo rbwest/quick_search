@@ -345,60 +345,119 @@
         dataInt = dataShared,
   	    margin = {top: 20, right: 20, bottom: 20, left: 20},
   	    width = +svg.attr("width") - margin.left - margin.right,
-  	    height = +svg.attr("height") - margin.top - margin.bottom
-  	    labelWidth = 100;
+        textPadding = 5,
+  	    rowHeight = 35,
+        barHeight = 25,
+        rankWidth = width/8,
+        categoryWidth = width/4,
+        countWidth = 5*width/16,
+        percentWidth = 5*width/16,
+        barCenter = rankWidth + categoryWidth + countWidth,
+        height = (dataInt.length+1) * rowHeight;
 
-  	var x = d3.scaleLinear().rangeRound([0, width - margin.left - margin.right - labelWidth]),
-  	    y = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom - 26])
-  	    yL = d3.scaleLinear().rangeRound([0, height - margin.top - margin.bottom]);
+    var x = d3.scaleLinear().rangeRound([0 , countWidth+percentWidth-200]);
+
+    x.domain([0 , d3.max(dataInt , function(d) { return d.clickcount })]);
 
   	var g = svg.append("g")
   	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  	x.domain([0, d3.max(dataInt, function(d) { return d.clickcount; })]);
-  	y.domain([0, d3.max(dataInt, function(d , i) { return i; })]);
+    // Make header row
+  	var head = g.append("g")
+  	  .attr("class", "head")
+  	  .attr("transform", "translate(0,0)");
 
-  	g.append("g")
-  	  .attr("class", "axis axis--x")
-  	  .attr("transform", "translate(" + labelWidth + ",50)")
-  	  .call(d3.axisTop(x).ticks(9));
+    head.append("rect")
+      .attr("class" , "darkBar")
+      .attr("x" , 0)
+      .attr("y" , 0)
+      .attr("width" , width)
+      .attr("height" , rowHeight);
 
-  	g.append("g")
-  	  .attr("class", "axis axis--y")
-  	  .attr("transform", "translate(" + labelWidth + ",50)")
-      .call(d3.axisLeft(yL).ticks(0));
+    head.append("text")
+      .text("Rank")
+      .attr("class" , "headText")
+      .attr("transform", "translate(" + textPadding + "," + (rowHeight/2 + textPadding) + ")");
 
-  	g.append("g")
-  	  .attr("class" , "data bars")
-  	  .attr("transform", "translate(" + (labelWidth+2) + ",52)")
-  	  .selectAll(".bar")
-  	  .data(dataInt)
-  	  .enter().append("rect")
-  	  .attr("class", "bar")
-  	  .attr("x", 0 )
-  	  .attr("y", function(d , i) { return y(i); })
-  	  .attr("width", function(d) { return x(d.clickcount); })
-  	  .attr("height", 25 );
+    head.append("text")
+      .text("Module/Result Type")
+      .attr("class" , "headText")
+      .attr("transform", "translate(" + (rankWidth + textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-  	g.append("g")
-  	  .attr("class" , "labels labels--x")
-  	  .attr("transform", "translate(" + (width/2 - 14) + ",30)")
-  	  .append("text")
-  	  .text("Click Count");
+    head.append("text")
+      .text("Count")
+      .attr("class" , "headText")
+      .attr("transform", "translate(" + (rankWidth + categoryWidth + textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-  	g.append("g")
-  	  .attr("class" , "labels labels--y")
-  	  .attr("transform", "translate(0,50)")
-  	  .selectAll(".label")
-  	  .data(dataInt)
-  	  .enter().append("text")
-  	  .text( function (d) { return d.action })
-  	  .attr("x" , 5)
-  	  .attr("y" , function (d , i) { return y(i) + 15; });
+    head.append("text")
+      .text("Percent")
+      .attr("class" , "percentText")
+      .attr("transform", "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (rowHeight/2 + textPadding) + ")");
+
+    // Make data rows
+    var enteringRows = g.append("g")
+      .attr("class" , "dataRows")
+      .attr("translate" , "transform(0," + "rowHeight" + ")")
+      .selectAll(".dataRow")
+      .data(dataInt).enter();
+
+    enteringRows.append("rect")
+      .attr("class" , function(d) { if(d.rank%2==0) return "darkBar" 
+                                    else return "lightBar"})
+      .attr("x" , 0)
+      .attr("y" , function(d) { return d.rank*rowHeight; })
+      .attr("width" , width)
+      .attr("height" , rowHeight);
+
+    enteringRows.append("text")
+      .text(function(d) { return d.rank})
+      .attr("class" , "headText")
+      .attr("transform", function(d) { return "translate(" + textPadding + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    enteringRows.append("text")
+      .text(function(d) { return d.action})
+      .attr("class" , "headText")
+      .attr("transform", function(d) { return "translate(" + (rankWidth + textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    enteringRows.append("text")
+      .text(function(d) { return d.clickcount})
+      .attr("class" , "headText")
+      .attr("transform", function(d) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    enteringRows.append("text")
+      .text(function(d) { return d.percentage + "%"})
+      .attr("class" , "percentText")
+      .attr("transform", function(d) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    enteringRows.append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return barCenter - x(d.clickcount)/2 } )
+      .attr("y", function(d) { return d.rank*rowHeight + (rowHeight-barHeight)/2; })
+      .attr("width", function(d) { return x(d.clickcount); })
+      .attr("height", barHeight );
+
+    // Add borders
+    g.append("rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", width)
+      .attr("height", height) // need to change this height to be dynamic
+      .style("stroke", "#DDD")
+      .style("fill", "none")
+      .style("stroke-width", "2px");
+
+    g.append("rect")
+      .attr("x", 0)
+      .attr("y", rowHeight)
+      .attr("width", width)
+      .attr("height", height-rowHeight) // need to change this height to be dynamic
+      .style("stroke", "#333")
+      .style("fill", "none")
+      .style("stroke-width", "2px");
   }
 
   function error() {
-      console.log("error")
+      console.log("Error retrieving data")
   }
   /////////////////////////////////////////////////////
 })();
