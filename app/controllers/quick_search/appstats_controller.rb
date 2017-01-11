@@ -61,13 +61,16 @@ module QuickSearch
 
       result = []
       total = 0
+      i = 1
       events.each do |data|
-        row = {"action" => data[0],
+        row = {"rank" => i,
+               "action" => data[0],
                "clickcount" => data[1],
                "percentage" => 0}
         result << row
 
         total += data[1]
+        i += 1
       end
 
       i = 0
@@ -88,13 +91,16 @@ module QuickSearch
 
       result = []
       total = 0
+      i = 1
       events.each do |data|
-        row = {"action" => data[0],
+        row = {"rank" => i,
+               "action" => data[0],
                "clickcount" => data[1],
                "percentage" => 0}
         result << row
 
         total += data[1]
+        i += 1
       end
 
       i = 0
