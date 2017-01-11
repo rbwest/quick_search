@@ -60,11 +60,20 @@ module QuickSearch
       events = Event.where(date_range).where(excluded_categories).where(:action => 'click').group(:category).order("count_category DESC").count(:category)
 
       result = []
+      total = 0
       events.each do |data|
-
         row = {"action" => data[0],
-               "clickcount" => data[1]}
+               "clickcount" => data[1],
+               "percentage" => 0}
         result << row
+
+        total += data[1]
+      end
+
+      i = 0
+      events.each do |data|
+        result[i]["percentage"] = ((100.0*data[1])/total).round(2)
+        i += 1
       end
 
       respond_to do |format|
@@ -78,11 +87,20 @@ module QuickSearch
       events = Event.where(date_range).where(:category => "result-types").where(:action => 'click').group(:item).order("count_item DESC").count(:item)
 
       result = []
+      total = 0
       events.each do |data|
-
         row = {"action" => data[0],
-               "clickcount" => data[1]}
+               "clickcount" => data[1],
+               "percentage" => 0}
         result << row
+
+        total += data[1]
+      end
+
+      i = 0
+      events.each do |data|
+        result[i]["percentage"] = ((100.0*data[1])/total).round(2)
+        i += 1
       end
 
       respond_to do |format|
