@@ -58,24 +58,18 @@ module QuickSearch
 
     def data_module_clicks
       events = Event.where(date_range).where(excluded_categories).where(:action => 'click').group(:category).order("count_category DESC").count(:category)
+      total_clicks = events.values.sum
 
       result = []
-      total = 0
       i = 1
       events.each do |data|
         row = {"rank" => i,
                "action" => data[0],
                "clickcount" => data[1],
-               "percentage" => 0}
+               "percentage" => ((100.0*data[1])/total_clicks).round(2),
+               "parent" => 0}
         result << row
 
-        total += data[1]
-        i += 1
-      end
-
-      i = 0
-      events.each do |data|
-        result[i]["percentage"] = ((100.0*data[1])/total).round(2)
         i += 1
       end
 
@@ -88,24 +82,41 @@ module QuickSearch
 
     def data_result_clicks
       events = Event.where(date_range).where(:category => "result-types").where(:action => 'click').group(:item).order("count_item DESC").count(:item)
+      total_clicks = events.values.sum
 
       result = []
-      total = 0
       i = 1
       events.each do |data|
         row = {"rank" => i,
                "action" => data[0],
                "clickcount" => data[1],
-               "percentage" => 0}
+               "percentage" => ((100.0*data[1])/total_clicks).round(2),
+               "parent" => 0}
         result << row
 
-        total += data[1]
         i += 1
       end
 
-      i = 0
-      events.each do |data|
-        result[i]["percentage"] = ((100.0*data[1])/total).round(2)
+      respond_to do |format|
+        format.json {
+          render :json => result
+        }
+      end
+    end
+
+    def data_module_details
+      category = params[:category]
+      modules_clicks = Event.where(:category => category).where(:action => 'click').where(date_range).group(:item).order('count_category DESC').count(:category)
+      total_clicks = modules_clicks.values.sum
+      result = []
+      i = 1
+      modules_clicks.each do |module_clicks|
+        row = {"rank" => i,
+               "action" => module_clicks[0],
+               "clickcount" => module_clicks[1],
+               "percentage" => ((100.0*module_clicks[1])/total_clicks).round(2),
+               "parent" => category}
+        result << row
         i += 1
       end
 
