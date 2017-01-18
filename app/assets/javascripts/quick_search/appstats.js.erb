@@ -94,6 +94,39 @@
     });
   }
 
+  function load_details(category) {
+    $.ajax({
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        url: 'data_module_clicks',
+        dataType: 'json',
+        success: function (updateDataSet) {
+          var updateData = _.cloneDeep(updateDataSet);
+          console.log(updateData);
+          $.ajax({
+              type: "GET",
+              contentType: "application/json; charset=utf-8",
+              url: 'data_module_details',
+              dataType: 'json',
+              data: {'category':category},
+              success: function (detailSet) {
+                var detailData = _.cloneDeep(detailSet);
+                console.log(detailData);
+                var index = _.findIndex(updateData, {'action':category});
+                updateData = _.concat(_.slice(updateData,0,index+1) , detailData , _.slice(updateData , index+1 , updateData.length));
+                draw_table_graph(updateData , "#module_clicks_graph");
+              },
+              error: function (result) {
+                 error();
+              }
+          });
+        },
+        error: function (result) {
+           error();
+        }
+    });
+  }
+
   function draw_mini_graph(dataShared , id) {
     console.log("In mini graph.");
     var svg = d3.select(id),
@@ -341,12 +374,12 @@
   function draw_table_graph(dataShared , id) {
     console.log("In table graph.");
     console.log(dataShared);
-  	var svg = d3.select(id),
-        dataInt = dataShared,
-  	    margin = {top: 20, right: 20, bottom: 20, left: 20},
-  	    width = +svg.attr("width") - margin.left - margin.right,
+    var dataInt = dataShared,
+        svg = d3.select(id),         
+        margin = {top: 20, right: 20, bottom: 20, left: 20},
+        width = +svg.attr("width") - margin.left - margin.right,
         textPadding = 5,
-  	    rowHeight = 35,
+        rowHeight = 35,
         barHeight = 25,
         rankWidth = width/8,
         categoryWidth = width/4,
@@ -355,102 +388,185 @@
         barCenter = rankWidth + categoryWidth + countWidth,
         height = (dataInt.length+1) * rowHeight;
 
+    svg.transition().duration(500)
+      .attr("height", height+margin.top+margin.bottom);
+
+    var groupEnter = svg.selectAll("g").data([dataInt]);
+
+    groupEnter.enter().append("g")
+      .attr("class", "gAll");
+
+    var gAll = svg.select(".gAll")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
     var x = d3.scaleLinear().rangeRound([0 , countWidth+percentWidth-200]);
 
     x.domain([0 , d3.max(dataInt , function(d) { return d.clickcount })]);
 
-  	var g = svg.append("g")
-  	    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // Make header row //////////////////////////////////////////////////////////////////////////////
+    var headGroupEnter = gAll.selectAll(".headRow").data([dataInt]).enter();
 
-    // Make header row
-  	var head = g.append("g")
-  	  .attr("class", "head")
-  	  .attr("transform", "translate(0,0)");
+    headGroupEnter.append("g")
+      .attr("class", "headRow");
 
-    head.append("rect")
+    var gHead = gAll.select(".headRow")
+      .attr("transform", "translate(0,0)");
+
+    var headEnter = gHead.selectAll("rect").data([dataInt]).enter();
+
+    headEnter.append("rect")
       .attr("class" , "darkBar")
       .attr("x" , 0)
       .attr("y" , 0)
       .attr("width" , width)
       .attr("height" , rowHeight);
 
-    head.append("text")
+    headEnter.append("text")
       .text("Rank")
       .attr("class" , "headText")
       .attr("transform", "translate(" + textPadding + "," + (rowHeight/2 + textPadding) + ")");
 
-    head.append("text")
+    headEnter.append("text")
       .text("Module/Result Type")
       .attr("class" , "headText")
       .attr("transform", "translate(" + (rankWidth + textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-    head.append("text")
+    headEnter.append("text")
       .text("Count")
       .attr("class" , "headText")
       .attr("transform", "translate(" + (rankWidth + categoryWidth + textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-    head.append("text")
+    headEnter.append("text")
       .text("Percent")
       .attr("class" , "percentText")
       .attr("transform", "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-    // Make data rows
-    var enteringRows = g.append("g")
-      .attr("class" , "dataRows")
-      .attr("translate" , "transform(0," + "rowHeight" + ")")
-      .selectAll(".dataRow")
-      .data(dataInt).enter();
+    // Make data rows ////////////////////////////////////////////////////////////////////////////////
+    var dataGroupEnter = gAll.selectAll(".dataRow").data([dataInt]);
 
-    enteringRows.append("rect")
-      .attr("class" , function(d) { if(d.rank%2==0) return "darkBar" 
+    dataGroupEnter.enter().append("g")
+      .attr("class", "dataRow");
+
+    var dataRows = gAll.select(".dataRow")
+      .attr("transform", "translate(0,0)");
+
+    // Make background rects
+    var dataRects = dataRows.selectAll(".darkBar, .lightBar").data(dataInt);
+
+    dataRects.exit().remove();
+    dataRects.enter().append("rect")
+      .attr("class" , function(d, i) { if(i%2==0) return "darkBar" 
                                     else return "lightBar"})
       .attr("x" , 0)
-      .attr("y" , function(d) { return d.rank*rowHeight; })
+      .attr("y" , function(d, i) { return (i+1)*rowHeight; })
       .attr("width" , width)
-      .attr("height" , rowHeight);
+      .attr("height" , rowHeight)
+      .on("click" , function(d) { load_details(d.action); });
 
-    enteringRows.append("text")
-      .text(function(d) { return d.rank})
-      .attr("class" , "headText")
-      .attr("transform", function(d) { return "translate(" + textPadding + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+    // Make rank text
+    var dataRanks = dataRows.selectAll(".dataRank").data(dataInt);
 
-    enteringRows.append("text")
-      .text(function(d) { return d.action})
-      .attr("class" , "headText")
-      .attr("transform", function(d) { return "translate(" + (rankWidth + textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+    dataRanks.transition().duration(500)
+      .style('opacity', 0.000001)
+      .transition().delay(250).duration(500)
+      .text(function (d) { return d.rank; })
+      .transition().duration(500)
+      .style('opacity', 1);
+    dataRanks.exit().remove();
+    dataRanks.enter().append("text")
+      .text(function(d) { return d.rank; })
+      .attr("class" , "dataRank")
+      .attr("transform", function(d, i) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
 
-    enteringRows.append("text")
-      .text(function(d) { return d.clickcount})
-      .attr("class" , "headText")
-      .attr("transform", function(d) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+    // Make action text
+    var dataActions = dataRows.selectAll(".dataAction").data(dataInt);
 
-    enteringRows.append("text")
-      .text(function(d) { return d.percentage + "%"})
-      .attr("class" , "percentText")
-      .attr("transform", function(d) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (d.rank*rowHeight + rowHeight/2 + textPadding) + ")"});
+    dataActions.transition().duration(500)
+      .style('opacity', 0.000001)
+      .transition().delay(250).duration(500)
+      .text(function (d) { return d.action; })
+      .transition().duration(500)
+      .style('opacity', 1);
+    dataActions.exit().remove();
+    dataActions.enter().append("text")
+      .text(function(d) { return d.action; } )
+      .attr("class" , "dataAction")
+      .attr("transform", function(d, i) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
 
-    enteringRows.append("rect")
+    // Make click text
+    var dataClicks = dataRows.selectAll(".dataClick").data(dataInt);
+
+    dataClicks.transition().duration(500)
+      .style('opacity', 0.000001)
+      .transition().delay(250).duration(500)
+      .text(function (d) { return d.clickcount; })
+      .transition().duration(500)
+      .style('opacity', 1);
+    dataClicks.exit().remove();
+    dataClicks.enter().append("text")
+      .text(function(d) { return d.clickcount; })
+      .attr("class" , "dataClick")
+      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    // Make percent text
+    var dataPercents = dataRows.selectAll(".dataPercent").data(dataInt);
+
+    dataPercents.transition().duration(500)
+      .style('opacity', 0.000001)
+      .transition().delay(250).duration(500)
+      .text(function (d) { return d.percentage; })
+      .transition().duration(500)
+      .style('opacity', 1);
+    dataPercents.exit().remove();
+    dataPercents.enter().append("text")
+      .text(function(d) { return d.percentage + "%"; })
+      .attr("class" , "dataPercent")
+      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
+
+    // Make data bars
+    var dataBars = dataRows.selectAll(".bar").data(dataInt);
+
+    dataBars.transition().duration(750)
+      .attr("x", barCenter)
+      .attr("width", 0)
+      .transition().duration(750)
+      .attr("x", function(d) { return barCenter - x(d.clickcount)/2 } )
+      .attr("width", function(d) { return x(d.clickcount); });
+    dataBars.exit().remove();
+    dataBars.enter().append("rect")
       .attr("class", "bar")
       .attr("x", function(d) { return barCenter - x(d.clickcount)/2 } )
-      .attr("y", function(d) { return d.rank*rowHeight + (rowHeight-barHeight)/2; })
+      .attr("y", function(d, i) { return (i+1)*rowHeight + (rowHeight-barHeight)/2; })
       .attr("width", function(d) { return x(d.clickcount); })
       .attr("height", barHeight );
 
-    // Add borders
-    g.append("rect")
+    // Add borders ///////////////////////////////////////////////////////////////////////////////////
+    var lightBorder = gAll.selectAll(".lightBorder").data([dataInt]);
+
+    lightBorder.transition().duration(750)
+      .attr("height", height);
+    lightBorder.exit().remove();
+    lightBorder.enter().append("rect")
+      .attr("class", "lightBorder")
       .attr("x", 0)
       .attr("y", 0)
       .attr("width", width)
-      .attr("height", height) // need to change this height to be dynamic
+      .attr("height", height)
       .style("stroke", "#DDD")
       .style("fill", "none")
       .style("stroke-width", "2px");
 
-    g.append("rect")
+    var darkBorder = gAll.selectAll(".darkBorder").data([dataInt]);
+
+    darkBorder.transition().duration(750)
+      .attr("height", height-rowHeight);
+    darkBorder.exit().remove();
+    darkBorder.enter().append("rect")
+      .attr("class", "darkBorder")
       .attr("x", 0)
       .attr("y", rowHeight)
       .attr("width", width)
-      .attr("height", height-rowHeight) // need to change this height to be dynamic
+      .attr("height", height-rowHeight)
       .style("stroke", "#333")
       .style("fill", "none")
       .style("stroke-width", "2px");
