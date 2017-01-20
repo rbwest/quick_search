@@ -67,7 +67,9 @@ module QuickSearch
                "action" => data[0],
                "clickcount" => data[1],
                "percentage" => ((100.0*data[1])/total_clicks).round(2),
-               "parent" => 0}
+               "parent" => 0,
+               "expanded" => 0,
+               "key" => data[0] + ((100.0*data[1])/total_clicks).to_s}
         result << row
 
         i += 1
@@ -91,7 +93,9 @@ module QuickSearch
                "action" => data[0],
                "clickcount" => data[1],
                "percentage" => ((100.0*data[1])/total_clicks).round(2),
-               "parent" => 0}
+               "parent" => 0,
+               "expanded" => 0,
+               "key" => data[0] + ((100.0*data[1])/total_clicks).to_s}
         result << row
 
         i += 1
@@ -115,8 +119,26 @@ module QuickSearch
                "action" => module_clicks[0],
                "clickcount" => module_clicks[1],
                "percentage" => ((100.0*module_clicks[1])/total_clicks).round(2),
-               "parent" => category}
+               "parent" => category,
+               "key" => module_clicks[0] + ((100.0*module_clicks[1])/total_clicks).to_s}
         result << row
+        i += 1
+      end
+
+      respond_to do |format|
+        format.json {
+          render :json => result
+        }
+      end
+    end
+
+    def data_result_details
+      # category = params[:category]
+      results_clicks = Event.where(:action => 'click').where(date_range).group(:id).order('id DESC')
+      result = []
+      i = 1
+      results_clicks.each do |result_clicks|
+        result << result_clicks
         i += 1
       end
 
