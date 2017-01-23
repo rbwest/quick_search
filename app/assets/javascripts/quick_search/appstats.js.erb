@@ -5,21 +5,21 @@
   var AppStatsGlobals = {};
 
   $(function () {
-    $('#appstats-date-showhide').click(function () {
-      $('#appstats-date-filter').toggle();
+    $("#appstats-date-showhide").click(function () {
+      $("#appstats-date-filter").toggle();
     });
   });
 
 
-  $('document').ready(function() {
+  $("document").ready(function() {
 
 
-      if($('#sample_graph').length){
+      if($("#sample_graph").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
-          url: 'appstats/data',
-          dataType: 'json',
+          url: "appstats/data",
+          dataType: "json",
           success: function (sampleDataSet) {
             var dataMain = _.cloneDeep(sampleDataSet);
             var dataMini = _.cloneDeep(sampleDataSet);
@@ -48,15 +48,18 @@
           }
       });
     }
-    if($('#module_clicks_graph').length){
+    if($("#module_clicks_graph").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
-          url: 'data_module_clicks',
-          dataType: 'json',
+          url: "data_module_clicks",
+          dataType: "json",
           success: function (moduleDataSet) {
             var moduleData = _.cloneDeep(moduleDataSet);
+            AppStatsGlobals.OriginalModuleData = moduleData;
             AppStatsGlobals.ModuleData = moduleData;
+            AppStatsGlobals.ModuleHeight = 450;
+            AppStatsGlobals.ModuleSort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
             draw_table_graph("#module_clicks_graph");
           },
           error: function (result) {
@@ -64,15 +67,18 @@
           }
       });
     }
-    if($('#result_clicks_graph').length){
+    if($("#result_clicks_graph").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
-          url: 'data_result_clicks',
-          dataType: 'json',
+          url: "data_result_clicks",
+          dataType: "json",
           success: function (resultDataSet) {
             var resultData = _.cloneDeep(resultDataSet);
+            AppStatsGlobals.OriginalResultData = resultData;
             AppStatsGlobals.ResultData = resultData;
+            AppStatsGlobals.ResultSort = 0;
+            AppStatsGlobals.ResultHeight = 450;
             draw_table_graph("#result_clicks_graph");
           },
           error: function (result) {
@@ -87,8 +93,8 @@
     $.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
-        url: 'appstats/data',
-        dataType: 'json',
+        url: "appstats/data",
+        dataType: "json",
         success: function (updateDataSet) {
           var updateData = _.cloneDeep(updateDataSet);
           draw_line_graph(updateData , true , index);
@@ -105,12 +111,12 @@
     $.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
-        url: 'data_module_details',
-        dataType: 'json',
-        data: {'category':category},
+        url: "data_module_details",
+        dataType: "json",
+        data: {"category":category},
         success: function (detailSet) {
           var detailData = _.cloneDeep(detailSet);
-          var index = _.findIndex(updateData, {'action':category});
+          var index = _.findIndex(updateData, {"action":category});
           updateData = _.concat(_.slice(updateData,0,index+1) , detailData , _.slice(updateData , index+1 , updateData.length));
           
           // NEED TO GENERALIZE
@@ -127,9 +133,9 @@
     console.log("Removing details");
     var updateData = _.cloneDeep(AppStatsGlobals.ModuleData);
     console.log(updateData);
-    var startIndex = _.findIndex(updateData, {'action':category});
+    var startIndex = _.findIndex(updateData, {"action":category});
     var endIndex = startIndex+1;
-    while (updateData[endIndex].parent) { endIndex++; }
+    while (endIndex<updateData.length && updateData[endIndex].parent) { endIndex++; }
     console.log("start=" + startIndex + ", end=" + endIndex);
     updateData = _.concat(_.slice(updateData,0,startIndex+1), _.slice(updateData , endIndex , updateData.length));
     console.log(updateData);
@@ -137,6 +143,31 @@
     // NEED TO GENERALIZE
     AppStatsGlobals.ModuleData = updateData;
     draw_table_graph("#module_clicks_graph");
+  }
+
+  function sort_table_data(id, sort) {
+    // rank asc
+    if (sort==0) { 
+      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.rank>b.rank; } ); 
+      AppStatsGlobals.ModuleSort = 0;
+    }
+    // rank desc
+    else if (sort==1) { 
+      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.rank<b.rank; } ); 
+      AppStatsGlobals.ModuleSort = 1;
+    }
+    // action asc
+    else if (sort==2) { 
+      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.action>b.action; } ); 
+      AppStatsGlobals.ModuleSort = 2;
+    }
+    // action desc
+    else if (sort==3) { 
+      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.action<b.action; } ); 
+      AppStatsGlobals.ModuleSort = 3;
+    }
+    
+    draw_table_graph(id);
   }
 
   function draw_mini_graph(dataShared , id) {
@@ -386,10 +417,16 @@
   function draw_table_graph(id) {
     console.log("In table graph.");
     console.log(AppStatsGlobals);
-    var dataInt;
+    var dataInt, oldHeight;
 
-    if (id=="#module_clicks_graph") { dataInt = AppStatsGlobals.ModuleData; }
-    else { dataInt = AppStatsGlobals.ResultData; }
+    if (id=="#module_clicks_graph") { 
+      dataInt = AppStatsGlobals.ModuleData; 
+      oldHeight = AppStatsGlobals.ModuleHeight;
+    }
+    else { 
+      dataInt = AppStatsGlobals.ResultData; 
+      oldHeight = AppStatsGlobals.ResultHeight;
+    }
 
     var svg = d3.select(id),         
         margin = {top: 20, right: 20, bottom: 20, left: 20},
@@ -402,11 +439,19 @@
         countWidth = 5*width/16,
         percentWidth = 5*width/16,
         barCenter = rankWidth + categoryWidth + countWidth,
-        height = (dataInt.length+1) * rowHeight
+        height = (dataInt.length+1) * rowHeight,
+        childOffset = 25,
+        triangleSpacing = 15,
+        sortStates = [0 , 0 , 0 , 0],
         key = function(d) { return d.key; };
 
-    svg.transition().duration(750)
-      .attr("height", height+margin.top+margin.bottom);
+    svg.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
+      .attr("height" , height+margin.top+margin.bottom)
+      .on("end" , function(d) { AppStatsGlobals.ModuleHeight = height; } );
 
     var groupEnter = svg.selectAll("g").data([dataInt]);
 
@@ -419,6 +464,11 @@
     var x = d3.scaleLinear().rangeRound([0 , countWidth+percentWidth-200]);
 
     x.domain([0 , d3.max(dataInt , function(d) { return d.clickcount })]);
+
+    var triangle = d3.symbol().type(d3.symbolTriangle).size(20);
+
+    // GENERALIZE
+    sortStates[AppStatsGlobals.ModuleSort] = 1;
 
     // Make header row //////////////////////////////////////////////////////////////////////////////
     var headGroupEnter = gAll.selectAll(".headRow").data([dataInt]).enter();
@@ -437,16 +487,48 @@
       .attr("y" , 0)
       .attr("width" , width)
       .attr("height" , rowHeight);
+      // .on("click" , function (d) {
+      //   AppStatsGlobals.ModuleSort++;
+      //   if (AppStatsGlobals.ModuleSort>3) { AppStatsGlobals.ModuleSort = 0; }
+      //   sort_table_data(id, AppStatsGlobals.ModuleSort);
+      // });
 
     headEnter.append("text")
       .text("Rank")
       .attr("class" , "headText")
       .attr("transform", "translate(" + textPadding + "," + (rowHeight/2 + textPadding) + ")");
 
+    headEnter.append("rect")
+      .attr("class" , "sortRect")
+      .attr("x" , (rankWidth - 2*triangleSpacing))
+      .attr("y" , 0)
+      .attr("width" , 2*triangleSpacing)
+      .attr("height" , rowHeight)
+      .on("click" , function(d) {
+        console.log(AppStatsGlobals.ModuleSort);
+        if (AppStatsGlobals.ModuleSort==0) { sort_table_data(id, 1); }
+        else { sort_table_data(id, 0); }
+      });
+
     headEnter.append("text")
-      .text("Module/Result Type")
+      .text( function (d) {
+        if (id=="#module_clicks_graph") { return "Module Clicked"; }
+        else { return "Result Clicked"; }
+      })
       .attr("class" , "headText")
       .attr("transform", "translate(" + (rankWidth + textPadding) + "," + (rowHeight/2 + textPadding) + ")");
+
+    headEnter.append("rect")
+      .attr("class" , "sortRect")
+      .attr("x" , (rankWidth + categoryWidth - 2*triangleSpacing))
+      .attr("y" , 0)
+      .attr("width" , 2*triangleSpacing)
+      .attr("height" , rowHeight)
+      .on("click" , function(d) {
+        console.log(AppStatsGlobals.ModuleSort);
+        if (AppStatsGlobals.ModuleSort==2) { sort_table_data(id, 3); }
+        else { sort_table_data(id, 2); }
+      });
 
     headEnter.append("text")
       .text("Count")
@@ -458,10 +540,27 @@
       .attr("class" , "percentText")
       .attr("transform", "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (rowHeight/2 + textPadding) + ")");
 
-    // Make data rows ////////////////////////////////////////////////////////////////////////////////
-    var dataGroupEnter = gAll.selectAll(".dataRow").data([dataInt]);
+    var triangles = gHead.selectAll("path").data(sortStates);
 
-    dataGroupEnter.enter().append("g")
+    triangles.enter().append("path")
+      .attr("d" , triangle)
+      .attr("transform" , function(d , i) { 
+        if (i==0)      { return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight/2 - textPadding) + ")"; }
+        else if (i==1) { return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight/2 + textPadding) + ") rotate(180)"; }
+        else if (i==2) { return "translate(" + (rankWidth + categoryWidth - triangleSpacing) + "," + (rowHeight/2 - textPadding) + ")"; }
+        else if (i==3) { return "translate(" + (rankWidth + categoryWidth - triangleSpacing) + "," + (rowHeight/2 + textPadding) + ") rotate(180)"; }
+      })
+    .merge(triangles)
+      .transition().duration(500)
+      .attr("fill" , function (d , i) { 
+        if (d) { return "steelblue"; }
+        else { return "lightsteelblue"; }
+      });
+
+    // Make data rows ////////////////////////////////////////////////////////////////////////////////
+    var dataGroup = gAll.selectAll(".dataRow").data([dataInt]);
+
+    dataGroup.enter().append("g")
       .attr("class", "dataRow");
 
     var dataRows = gAll.select(".dataRow")
@@ -470,13 +569,17 @@
     // Make background rects
     var dataRects = dataRows.selectAll(".darkBar, .lightBar").data(dataInt, key);
 
-    dataRects.transition().duration(750)
+    dataRects.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
       .attr("y" , function(d, i) { return (i+1)*rowHeight; });
     dataRects.exit().remove();
     dataRects.enter().append("rect")
       .attr("class" , function(d, i) { 
-        if(i%2==0) { return "darkBar"; }
-        else { return "lightBar"; }
+        if(d.parent) { return "lightBar"; }
+        else { return "darkBar"; }
       })
       .attr("x" , 0)
       .attr("y" , function(d, i) { return (i+1)*rowHeight; })
@@ -496,71 +599,142 @@
     // Make rank text
     var dataRanks = dataRows.selectAll(".dataRank").data(dataInt, key);
 
-    dataRanks.transition().duration(750)
-      .attr("transform", function(d, i) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
-    dataRanks.exit().remove();
+    dataRanks.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        else { return "translate(" + (textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      });
+    dataRanks.exit().transition().duration(500)
+      .style("opacity", .000001)
+      .remove();
     dataRanks.enter().append("text")
       .style("opacity", .000001)
       .text(function(d) { return d.rank; })
       .attr("class" , "dataRank")
-      .attr("transform", function(d, i) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"})
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        else { return "translate(" + (textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
 
     // Make action text
     var dataActions = dataRows.selectAll(".dataAction").data(dataInt, key);
 
-    dataActions.transition().duration(750)
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
-    dataActions.exit().remove();
+    dataActions.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      });
+    dataActions.exit().transition().duration(500)
+      .style("opacity", .000001)
+      .remove();
     dataActions.enter().append("text")
       .style("opacity", .000001)
-      .text(function(d) { return d.action; } )
+      .text(function(d) { 
+        if (d.action.length>20) { return d.action.slice(0,20) + "..."; }
+        else { return d.action; } 
+      })
       .attr("class" , "dataAction")
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"})
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
 
     // Make click text
     var dataClicks = dataRows.selectAll(".dataClick").data(dataInt, key);
 
-    dataClicks.transition().duration(750)
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
-    dataClicks.exit().remove();
+    dataClicks.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      });
+    dataClicks.exit().transition().duration(500)
+      .style("opacity", .000001)
+      .remove();
     dataClicks.enter().append("text")
       .style("opacity", .000001)
       .text(function(d) { return d.clickcount; })
       .attr("class" , "dataClick")
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"})
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
 
     // Make percent text
     var dataPercents = dataRows.selectAll(".dataPercent").data(dataInt, key);
 
-    dataPercents.transition().duration(750)
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"});
-    dataPercents.exit().remove();
+    dataPercents.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      });
+    dataPercents.exit().transition().duration(500)
+      .style("opacity", .000001)
+      .remove();
     dataPercents.enter().append("text")
       .style("opacity", .000001)
       .text(function(d) { return d.percentage + "%"; })
       .attr("class" , "dataPercent")
-      .attr("transform", function(d, i) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"})
+      .attr("transform", function(d, i) { 
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+      })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
 
     // Make data bars
-    var dataBars = dataRows.selectAll(".bar").data(dataInt, key);
+    var dataBars = dataRows.selectAll(".dataBar, .lightDataBar").data(dataInt, key);
 
-    dataBars.transition().duration(750)
+    dataBars.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
       .attr("y", function(d, i) { return (i+1)*rowHeight + (rowHeight-barHeight)/2; });
-    dataBars.exit().remove();
+    dataBars.exit().transition().duration(500)
+      .attr("x", barCenter)
+      .attr("width", 0)
+      .remove();
     dataBars.enter().append("rect")
-      .attr("class", "bar")
+      .attr("class", function (d) { 
+        if (!d.parent) { return "dataBar"; }
+        else { return "lightDataBar"; }
+      })
       .attr("x", function(d) { return barCenter; } )
       .attr("y", function(d, i) { return (i+1)*rowHeight + (rowHeight-barHeight)/2; })
       .attr("width", function(d) { return 0; })
       .attr("height", barHeight )
+      .on("click" , function(d) { 
+        if(!d.expanded && !d.parent) { 
+          d.expanded = 1;
+          load_details(d.action, id);
+        }
+        else if (d.expanded && !d.parent) {
+          d.expanded = 0;
+          remove_details(d.action, id);
+        }
+      })
     .transition().delay(750).duration(500)
       .attr("x", function(d) { return barCenter - x(d.clickcount)/2; } )
       .attr("width", function(d) { return x(d.clickcount); });
@@ -568,7 +742,11 @@
     // Add borders ///////////////////////////////////////////////////////////////////////////////////
     var lightBorder = gAll.selectAll(".lightBorder").data([dataInt]);
 
-    lightBorder.transition().duration(750)
+    lightBorder.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
       .attr("height", height);
     lightBorder.exit().remove();
     lightBorder.enter().append("rect")
@@ -576,14 +754,15 @@
       .attr("x", 0)
       .attr("y", 0)
       .attr("width", width)
-      .attr("height", height)
-      .style("stroke", "#DDD")
-      .style("fill", "none")
-      .style("stroke-width", "2px");
+      .attr("height", height);;
 
     var darkBorder = gAll.selectAll(".darkBorder").data([dataInt]);
 
-    darkBorder.transition().duration(750)
+    darkBorder.transition().delay( function(d) {
+        if (oldHeight > height) { return 500; }
+        else { return 0; }
+      })
+      .duration(750)
       .attr("height", height-rowHeight);
     darkBorder.exit().remove();
     darkBorder.enter().append("rect")
@@ -591,10 +770,7 @@
       .attr("x", 0)
       .attr("y", rowHeight)
       .attr("width", width)
-      .attr("height", height-rowHeight)
-      .style("stroke", "#333")
-      .style("fill", "none")
-      .style("stroke-width", "2px");
+      .attr("height", height-rowHeight);;
   }
 
   function error() {
