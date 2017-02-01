@@ -1,8 +1,9 @@
 // Place all the behaviors and hooks related to the matching controller here.
 // All this logic will automatically be available in application.js.
 (function() {
-  console.log("In appstats.js")
   var AppStatsGlobals = {};
+  AppStatsGlobals["#module_clicks_graph"] = {};
+  AppStatsGlobals["#result_clicks_graph"] = {};
 
   $(function () {
     $("#appstats-date-showhide").click(function () {
@@ -12,8 +13,6 @@
 
 
   $("document").ready(function() {
-
-
       if($("#sample_graph").length){
       $.ajax({
           type: "GET",
@@ -56,10 +55,10 @@
           dataType: "json",
           success: function (moduleDataSet) {
             var moduleData = _.cloneDeep(moduleDataSet);
-            AppStatsGlobals.OriginalModuleData = moduleData;
-            AppStatsGlobals.ModuleData = moduleData;
-            AppStatsGlobals.ModuleHeight = 450;
-            AppStatsGlobals.ModuleSort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
+            AppStatsGlobals["#module_clicks_graph"].OriginalData = moduleData;
+            AppStatsGlobals["#module_clicks_graph"].Data = moduleData;
+            AppStatsGlobals["#module_clicks_graph"].Height = 450;
+            AppStatsGlobals["#module_clicks_graph"].Sort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
             draw_table_graph("#module_clicks_graph");
           },
           error: function (result) {
@@ -75,10 +74,10 @@
           dataType: "json",
           success: function (resultDataSet) {
             var resultData = _.cloneDeep(resultDataSet);
-            AppStatsGlobals.OriginalResultData = resultData;
-            AppStatsGlobals.ResultData = resultData;
-            AppStatsGlobals.ResultSort = 0;
-            AppStatsGlobals.ResultHeight = 450;
+            AppStatsGlobals["#result_clicks_graph"].OriginalData = resultData;
+            AppStatsGlobals["#result_clicks_graph"].Data = resultData;
+            AppStatsGlobals["#result_clicks_graph"].Sort = 0;
+            AppStatsGlobals["#result_clicks_graph"].Height = 450;
             draw_table_graph("#result_clicks_graph");
           },
           error: function (result) {
@@ -106,8 +105,7 @@
   }
 
   function load_details(category, id) {
-    // NEED TO GENERALIZE
-    var updateData = _.cloneDeep(AppStatsGlobals.ModuleData);
+    var updateData = _.cloneDeep(AppStatsGlobals[id].Data);
     $.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
@@ -119,9 +117,8 @@
           var index = _.findIndex(updateData, {"action":category});
           updateData = _.concat(_.slice(updateData,0,index+1) , detailData , _.slice(updateData , index+1 , updateData.length));
           
-          // NEED TO GENERALIZE
-          AppStatsGlobals.ModuleData = updateData;
-          draw_table_graph("#module_clicks_graph");
+          AppStatsGlobals[id].Data = updateData;
+          draw_table_graph(id);
         },
         error: function (result) {
            error();
@@ -130,8 +127,7 @@
   }
 
   function remove_details(category, id) {
-    console.log("Removing details");
-    var updateData = _.cloneDeep(AppStatsGlobals.ModuleData);
+    var updateData = _.cloneDeep(AppStatsGlobals[id].Data);
     console.log(updateData);
     var startIndex = _.findIndex(updateData, {"action":category});
     var endIndex = startIndex+1;
@@ -140,38 +136,36 @@
     updateData = _.concat(_.slice(updateData,0,startIndex+1), _.slice(updateData , endIndex , updateData.length));
     console.log(updateData);
     
-    // NEED TO GENERALIZE
-    AppStatsGlobals.ModuleData = updateData;
-    draw_table_graph("#module_clicks_graph");
+    AppStatsGlobals[id].Data = updateData;
+    draw_table_graph(id);
   }
 
   function sort_table_data(id, sort) {
     // rank asc
     if (sort==0) { 
-      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.rank>b.rank; } ); 
-      AppStatsGlobals.ModuleSort = 0;
+      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank>b.rank; } ); 
+      AppStatsGlobals[id].Sort = 0;
     }
     // rank desc
     else if (sort==1) { 
-      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.rank<b.rank; } ); 
-      AppStatsGlobals.ModuleSort = 1;
+      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank<b.rank; } ); 
+      AppStatsGlobals[id].Sort = 1;
     }
     // action asc
     else if (sort==2) { 
-      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.action>b.action; } ); 
-      AppStatsGlobals.ModuleSort = 2;
+      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action>b.action; } ); 
+      AppStatsGlobals[id].Sort = 2;
     }
     // action desc
     else if (sort==3) { 
-      AppStatsGlobals.ModuleData = AppStatsGlobals.OriginalModuleData.sort( function(a,b) { return a.action<b.action; } ); 
-      AppStatsGlobals.ModuleSort = 3;
+      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action<b.action; } ); 
+      AppStatsGlobals[id].Sort = 3;
     }
-    
+
     draw_table_graph(id);
   }
 
   function draw_mini_graph(dataShared , id) {
-    console.log("In mini graph.");
     var svg = d3.select(id),
         dataInt = dataShared,
         margin = {top: 5, right: 5, bottom: 5, left: 5}
@@ -238,7 +232,6 @@
   }
 
   function draw_line_graph(dataShared , transitioning , index) {
-    console.log("In line graph.");
     var transitioning = transitioning;
     var svg = d3.select("#sample_graph"),
         dataInt = dataShared[index],
@@ -408,25 +401,19 @@
 
     function type(d) {
       d.date = parseDate(d.date);
-      console.log(d.date);
       d.count = +d.count;
       return d;
     }
   }
 
   function draw_table_graph(id) {
-    console.log("In table graph.");
-    console.log(AppStatsGlobals);
-    var dataInt, oldHeight;
+    console.log(AppStatsGlobals)
+    var Globals = AppStatsGlobals[id], 
+        sortStates = [0 , 0 , 0 , 0]
+        dataInt = Globals.Data,
+        oldHeight = Globals.Height;
 
-    if (id=="#module_clicks_graph") { 
-      dataInt = AppStatsGlobals.ModuleData; 
-      oldHeight = AppStatsGlobals.ModuleHeight;
-    }
-    else { 
-      dataInt = AppStatsGlobals.ResultData; 
-      oldHeight = AppStatsGlobals.ResultHeight;
-    }
+    sortStates[Globals.Sort] = 1;
 
     var svg = d3.select(id),         
         margin = {top: 20, right: 20, bottom: 20, left: 20},
@@ -442,7 +429,6 @@
         height = (dataInt.length+1) * rowHeight,
         childOffset = 25,
         triangleSpacing = 15,
-        sortStates = [0 , 0 , 0 , 0],
         key = function(d) { return d.key; };
 
     svg.transition().delay( function(d) {
@@ -451,7 +437,7 @@
       })
       .duration(750)
       .attr("height" , height+margin.top+margin.bottom)
-      .on("end" , function(d) { AppStatsGlobals.ModuleHeight = height; } );
+      .on("end" , function(d) { Globals.Height = height; } );
 
     var groupEnter = svg.selectAll("g").data([dataInt]);
 
@@ -466,9 +452,6 @@
     x.domain([0 , d3.max(dataInt , function(d) { return d.clickcount })]);
 
     var triangle = d3.symbol().type(d3.symbolTriangle).size(20);
-
-    // GENERALIZE
-    sortStates[AppStatsGlobals.ModuleSort] = 1;
 
     // Make header row //////////////////////////////////////////////////////////////////////////////
     var headGroupEnter = gAll.selectAll(".headRow").data([dataInt]).enter();
@@ -487,11 +470,6 @@
       .attr("y" , 0)
       .attr("width" , width)
       .attr("height" , rowHeight);
-      // .on("click" , function (d) {
-      //   AppStatsGlobals.ModuleSort++;
-      //   if (AppStatsGlobals.ModuleSort>3) { AppStatsGlobals.ModuleSort = 0; }
-      //   sort_table_data(id, AppStatsGlobals.ModuleSort);
-      // });
 
     headEnter.append("text")
       .text("Rank")
@@ -505,8 +483,7 @@
       .attr("width" , 2*triangleSpacing)
       .attr("height" , rowHeight)
       .on("click" , function(d) {
-        console.log(AppStatsGlobals.ModuleSort);
-        if (AppStatsGlobals.ModuleSort==0) { sort_table_data(id, 1); }
+        if (Globals.Sort==0) { sort_table_data(id, 1); }
         else { sort_table_data(id, 0); }
       });
 
@@ -525,8 +502,7 @@
       .attr("width" , 2*triangleSpacing)
       .attr("height" , rowHeight)
       .on("click" , function(d) {
-        console.log(AppStatsGlobals.ModuleSort);
-        if (AppStatsGlobals.ModuleSort==2) { sort_table_data(id, 3); }
+        if (Globals.Sort==2) { sort_table_data(id, 3); }
         else { sort_table_data(id, 2); }
       });
 
@@ -586,11 +562,11 @@
       .attr("width" , width)
       .attr("height" , rowHeight)
       .on("click" , function(d) { 
-        if(!d.expanded && !d.parent) { 
+        if(id=="#module_clicks_graph" && !d.expanded && !d.parent) { 
           d.expanded = 1;
           load_details(d.action, id);
         }
-        else if (d.expanded && !d.parent) {
+        else if (id=="#module_clicks_graph" && d.expanded && !d.parent) {
           d.expanded = 0;
           remove_details(d.action, id);
         }
@@ -605,8 +581,8 @@
       })
       .duration(750)
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
-        else { return "translate(" + (textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + textPadding + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        else { return "translate(" + (textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       });
     dataRanks.exit().transition().duration(500)
       .style("opacity", .000001)
@@ -616,8 +592,8 @@
       .text(function(d) { return d.rank; })
       .attr("class" , "dataRank")
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + textPadding + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
-        else { return "translate(" + (textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + textPadding + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        else { return "translate(" + (textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
@@ -631,8 +607,8 @@
       })
       .duration(750)
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       });
     dataActions.exit().transition().duration(500)
       .style("opacity", .000001)
@@ -645,8 +621,8 @@
       })
       .attr("class" , "dataAction")
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
@@ -660,8 +636,8 @@
       })
       .duration(750)
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       });
     dataClicks.exit().transition().duration(500)
       .style("opacity", .000001)
@@ -671,8 +647,8 @@
       .text(function(d) { return d.clickcount; })
       .attr("class" , "dataClick")
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + textPadding + childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
@@ -686,8 +662,8 @@
       })
       .duration(750)
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       });
     dataPercents.exit().transition().duration(500)
       .style("opacity", .000001)
@@ -697,8 +673,8 @@
       .text(function(d) { return d.percentage + "%"; })
       .attr("class" , "dataPercent")
       .attr("transform", function(d, i) { 
-        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
-        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + ((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
+        if (!d.parent) { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")";  }
+        else { return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding - childOffset) + "," + Math.floor((i+1)*rowHeight + rowHeight/2 + textPadding) + ")"; }
       })
     .transition().delay(750).duration(500)
       .style("opacity" , 1);
@@ -726,11 +702,11 @@
       .attr("width", function(d) { return 0; })
       .attr("height", barHeight )
       .on("click" , function(d) { 
-        if(!d.expanded && !d.parent) { 
+        if(id=="#module_clicks_graph" && !d.expanded && !d.parent) { 
           d.expanded = 1;
           load_details(d.action, id);
         }
-        else if (d.expanded && !d.parent) {
+        else if (id=="#module_clicks_graph" && d.expanded && !d.parent) {
           d.expanded = 0;
           remove_details(d.action, id);
         }
