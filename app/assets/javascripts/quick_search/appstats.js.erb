@@ -60,7 +60,7 @@
             AppStatsGlobals["#graph_module_clicks"].OriginalData = moduleData;
             AppStatsGlobals["#graph_module_clicks"].Data = moduleData;
             AppStatsGlobals["#graph_module_clicks"].Height = 450;
-            AppStatsGlobals["#graph_module_clicks"].Sort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
+            AppStatsGlobals["#graph_module_clicks"].Sort = 0;
             draw_table_graph("#graph_module_clicks");
           },
           error: function (result) {
@@ -93,6 +93,7 @@
       console.log("Error retrieving data")
   }
 
+  ////////////////////////////////////////// GENERAL STATISTICS //////////////////////////////////////////////////
   function draw_line_graph(dataShared , transitioning , index) {
     var transitioning = transitioning;
     var Globals = AppStatsGlobals["#graph_result_clicks"],
@@ -395,7 +396,9 @@
         .attr("class", "yAxis")
         .call(yAxis.ticks(0));
   }
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  //////////////////////////////////////////// CLICKS OVERVIEW ///////////////////////////////////////////////////
   function draw_table_graph(id) {
     var Globals = AppStatsGlobals[id], 
         sortStates = [0 , 0 , 0 , 0]
@@ -841,5 +844,11 @@
     AppStatsGlobals[id].Sort = sort;
     draw_table_graph(id);
   }
-  /////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////////////////// TOP SEARCHES /////////////////////////////////////////////////////
+  function draw_graph_search() {
+  }
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 })();

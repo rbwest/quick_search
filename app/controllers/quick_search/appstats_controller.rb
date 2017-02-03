@@ -131,6 +131,37 @@ module QuickSearch
         }
       end
     end
+
+    def data_top_searches
+      top_searches = Search.where(:page => '/').where(date_range).limit(200).group(:query).order('count_query DESC').count(:query)
+      total_searches = Search.where(:page => '/').where(date_range).group(:query).order('count_query DESC').count(:query).sum {|k,v| v}
+      puts("sum = " + total_searches.to_s)
+      result = []
+      last_row = {}
+      i=1
+      top_searches.each do |search|
+        if (last_row=={}) 
+          last_cum_percentage = 0
+        else 
+          last_cum_percentage = last_row["cum_percentage"]
+        end
+        row = {"rank" => i,
+               "query" => search[0],
+               "count" => search[1],
+               "percentage" => ((100.0*search[1])/total_searches).round(2),
+               "cum_percentage" => (last_cum_percentage + ((100.0*search[1])/total_searches)).round(2),
+               "key" => search[0] + ((100.0*search[1])/total_searches).to_s}
+        result << row
+        last_row = row
+        i += 1
+      end
+
+      respond_to do |format|
+        format.json {
+          render :json => result
+        }
+      end
+    end
     ##############################################################
 
     def index
