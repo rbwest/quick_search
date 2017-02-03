@@ -397,7 +397,6 @@
   }
 
   function draw_table_graph(id) {
-    console.log(AppStatsGlobals)
     var Globals = AppStatsGlobals[id], 
         sortStates = [0 , 0 , 0 , 0]
         dataInt = Globals.Data,
@@ -776,27 +775,70 @@
   }
 
   function sort_table_data(id, sort) {
-    // rank asc
-    if (sort==0) { 
-      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank>b.rank; } ); 
-      AppStatsGlobals[id].Sort = 0;
+    if (AppStatsGlobals[id].Data.length != AppStatsGlobals[id].OriginalData.length) {     // If details are present, those must be removed first
+      // Go back to original data set (no details)
+      switch(AppStatsGlobals[id].Sort) {
+        case 0: // rank asc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank>b.rank; } );
+          break;
+        case 1: // rank desc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank<b.rank; } ); 
+          break;
+        case 2: // action asc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action>b.action; } ); 
+          break;
+        case 3: // action desc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action<b.action; } ); 
+          break;
+      }
+
+      // Apply new sort after 750 mS (time for details to be removed)
+      switch(sort) {
+        case 0: // rank asc
+          setTimeout(function() {
+            AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank>b.rank; } );
+            draw_table_graph(id);
+          } , 750);
+          break;
+        case 1: // rank desc
+          setTimeout(function() {
+            AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank<b.rank; } ); 
+            draw_table_graph(id);
+          } , 750);
+          break;
+        case 2: // action asc
+          setTimeout(function() {
+            AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action>b.action; } ); 
+            draw_table_graph(id);
+          } , 750);
+          break;
+        case 3: // action desc
+          setTimeout(function() {
+            AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action<b.action; } ); 
+            draw_table_graph(id);
+          } , 750);
+          break;
+      }
     }
-    // rank desc
-    else if (sort==1) { 
-      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank<b.rank; } ); 
-      AppStatsGlobals[id].Sort = 1;
-    }
-    // action asc
-    else if (sort==2) { 
-      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action>b.action; } ); 
-      AppStatsGlobals[id].Sort = 2;
-    }
-    // action desc
-    else if (sort==3) { 
-      AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action<b.action; } ); 
-      AppStatsGlobals[id].Sort = 3;
+    else {     // Otherwise, you can just resort the data
+      switch(sort) {
+        case 0: // rank asc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank>b.rank; } );
+          break;
+        case 1: // rank desc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.rank<b.rank; } ); 
+          break;
+        case 2: // action asc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action>b.action; } ); 
+          break;
+        case 3: // action desc
+          AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort( function(a,b) { return a.action<b.action; } ); 
+          break;
+      }
     }
 
+    // Update global sort and redraw
+    AppStatsGlobals[id].Sort = sort;
     draw_table_graph(id);
   }
   /////////////////////////////////////////////////////
