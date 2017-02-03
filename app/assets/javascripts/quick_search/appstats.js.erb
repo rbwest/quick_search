@@ -261,9 +261,10 @@
     brushSelection.exit().remove();
     brushSelection.enter().append("g")
         .attr("class", "brush")
-      .merge(brushSelection)
         .call(brush)
-        .call(brush.move, x.range());
+        .call(brush.move, x.range())
+      .merge(brushSelection)
+        .call(brush);
 
     // Make zoom container
     var zoomSelection = svg.selectAll(".zoom").data([dataInt]);
