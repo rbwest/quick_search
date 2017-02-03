@@ -2,9 +2,9 @@
 // All this logic will automatically be available in application.js.
 (function() {
   var AppStatsGlobals = {};
-  AppStatsGlobals["#sample_graph"] = {};
-  AppStatsGlobals["#module_clicks_graph"] = {};
-  AppStatsGlobals["#result_clicks_graph"] = {};
+  AppStatsGlobals["#graph_line"] = {};
+  AppStatsGlobals["#graph_module_clicks"] = {};
+  AppStatsGlobals["#graph_result_clicks"] = {};
 
 
   $(function () {
@@ -15,7 +15,7 @@
 
 
   $("document").ready(function() {
-    if($("#sample_graph").length){
+    if($("#graph_line").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
@@ -49,7 +49,7 @@
           }
       });
     }
-    if($("#module_clicks_graph").length){
+    if($("#graph_module_clicks").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
@@ -57,18 +57,18 @@
           dataType: "json",
           success: function (moduleDataSet) {
             var moduleData = _.cloneDeep(moduleDataSet);
-            AppStatsGlobals["#module_clicks_graph"].OriginalData = moduleData;
-            AppStatsGlobals["#module_clicks_graph"].Data = moduleData;
-            AppStatsGlobals["#module_clicks_graph"].Height = 450;
-            AppStatsGlobals["#module_clicks_graph"].Sort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
-            draw_table_graph("#module_clicks_graph");
+            AppStatsGlobals["#graph_module_clicks"].OriginalData = moduleData;
+            AppStatsGlobals["#graph_module_clicks"].Data = moduleData;
+            AppStatsGlobals["#graph_module_clicks"].Height = 450;
+            AppStatsGlobals["#graph_module_clicks"].Sort = 0;             // 0=rank asc, 1=rank desc, 2=action asc(alpha), 3=action desc(reverse alpha)
+            draw_table_graph("#graph_module_clicks");
           },
           error: function (result) {
              error();
           }
       });
     }
-    if($("#result_clicks_graph").length){
+    if($("#graph_result_clicks").length){
       $.ajax({
           type: "GET",
           contentType: "application/json; charset=utf-8",
@@ -76,11 +76,11 @@
           dataType: "json",
           success: function (resultDataSet) {
             var resultData = _.cloneDeep(resultDataSet);
-            AppStatsGlobals["#result_clicks_graph"].OriginalData = resultData;
-            AppStatsGlobals["#result_clicks_graph"].Data = resultData;
-            AppStatsGlobals["#result_clicks_graph"].Sort = 0;
-            AppStatsGlobals["#result_clicks_graph"].Height = 450;
-            draw_table_graph("#result_clicks_graph");
+            AppStatsGlobals["#graph_result_clicks"].OriginalData = resultData;
+            AppStatsGlobals["#graph_result_clicks"].Data = resultData;
+            AppStatsGlobals["#graph_result_clicks"].Sort = 0;
+            AppStatsGlobals["#graph_result_clicks"].Height = 450;
+            draw_table_graph("#graph_result_clicks");
           },
           error: function (result) {
              error();
@@ -95,8 +95,8 @@
 
   function draw_line_graph(dataShared , transitioning , index) {
     var transitioning = transitioning;
-    var Globals = AppStatsGlobals["#result_clicks_graph"],
-        svg = d3.select("#sample_graph"),
+    var Globals = AppStatsGlobals["#graph_result_clicks"],
+        svg = d3.select("#graph_line"),
         dataInt = dataShared[index],
         margin = {top: 20, right: 20, bottom: 110, left: 40},
         margin2 = {top: 430, right: 20, bottom: 30, left: 40},
@@ -478,7 +478,7 @@
 
     headEnter.append("text")
       .text( function (d) {
-        if (id=="#module_clicks_graph") { return "Module Clicked"; }
+        if (id=="#graph_module_clicks") { return "Module Clicked"; }
         else { return "Result Clicked"; }
       })
       .attr("class" , "headText")
@@ -551,11 +551,11 @@
       .attr("width" , width)
       .attr("height" , rowHeight)
       .on("click" , function(d) { 
-        if(id=="#module_clicks_graph" && !d.expanded && !d.parent) { 
+        if(id=="#graph_module_clicks" && !d.expanded && !d.parent) { 
           d.expanded = 1;
           load_details(d.action, id);
         }
-        else if (id=="#module_clicks_graph" && d.expanded && !d.parent) {
+        else if (id=="#graph_module_clicks" && d.expanded && !d.parent) {
           d.expanded = 0;
           remove_details(d.action, id);
         }
@@ -691,11 +691,11 @@
       .attr("width", function(d) { return 0; })
       .attr("height", barHeight )
       .on("click" , function(d) { 
-        if(id=="#module_clicks_graph" && !d.expanded && !d.parent) { 
+        if(id=="#graph_module_clicks" && !d.expanded && !d.parent) { 
           d.expanded = 1;
           load_details(d.action, id);
         }
-        else if (id=="#module_clicks_graph" && d.expanded && !d.parent) {
+        else if (id=="#graph_module_clicks" && d.expanded && !d.parent) {
           d.expanded = 0;
           remove_details(d.action, id);
         }
