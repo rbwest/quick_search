@@ -512,6 +512,7 @@
 
     triangles.enter().append("path")
       .attr("d" , triangle)
+      .attr("pointer-events", "none")
       .attr("transform" , function(d , i) { 
         if (i==0)      { return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight/2 - textPadding) + ")"; }
         else if (i==1) { return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight/2 + textPadding) + ") rotate(180)"; }
