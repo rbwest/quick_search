@@ -64,7 +64,7 @@ module QuickSearch
       i = 1
       events.each do |data|
         row = {"rank" => i,
-               "action" => data[0],
+               "label" => data[0],
                "clickcount" => data[1],
                "percentage" => ((100.0*data[1])/total_clicks).round(2),
                "parent" => 0,
@@ -90,7 +90,7 @@ module QuickSearch
       i = 1
       events.each do |data|
         row = {"rank" => i,
-               "action" => data[0],
+               "label" => data[0],
                "clickcount" => data[1],
                "percentage" => ((100.0*data[1])/total_clicks).round(2),
                "parent" => 0,
@@ -116,7 +116,7 @@ module QuickSearch
       i = 1
       modules_clicks.each do |module_clicks|
         row = {"rank" => i,
-               "action" => module_clicks[0],
+               "label" => module_clicks[0],
                "clickcount" => module_clicks[1],
                "percentage" => ((100.0*module_clicks[1])/total_clicks).round(2),
                "parent" => category,
@@ -146,11 +146,11 @@ module QuickSearch
           last_cum_percentage = last_row["cum_percentage"]
         end
         row = {"rank" => i,
-               "query" => search[0],
+               "label" => search[0],
                "count" => search[1],
                "percentage" => ((100.0*search[1])/total_searches).round(2),
                "cum_percentage" => (last_cum_percentage + ((100.0*search[1])/total_searches)).round(2),
-               "key" => search[0] + ((100.0*search[1])/total_searches).to_s}
+               "key" => i.to_s + search[0] + ((100.0*search[1])/total_searches).to_s}
         result << row
         last_row = row
         i += 1
