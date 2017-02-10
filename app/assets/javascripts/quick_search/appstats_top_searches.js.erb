@@ -1,0 +1,534 @@
+(function() {
+    var AppStatsGlobals = {};
+    AppStatsGlobals["#graph_top_searches"] = {};
+
+    $(document).on("turbolinks:load", function() {
+        if ($("#graph_top_searches").length) {
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "data_top_searches",
+                dataType: "json",
+                success: function(searchDataSet) {
+                    var searchData = _.cloneDeep(searchDataSet);
+                    AppStatsGlobals["#graph_top_searches"].OriginalData = searchData;
+                    AppStatsGlobals["#graph_top_searches"].Data = searchData;
+                    AppStatsGlobals["#graph_top_searches"].Sort = 0;
+                    AppStatsGlobals["#graph_top_searches"].Height = 450;
+                    draw_graph_top_searches();
+                },
+                error: function(result) {
+                    error();
+                }
+            });
+        }
+    });
+
+    function error() {
+        console.log("Error retrieving data");
+    }
+
+    function draw_graph_top_searches() {
+        var Globals = AppStatsGlobals["#graph_top_searches"],
+            sortStates = [0, 0, 0, 0]
+        dataInt = Globals.Data,
+            oldHeight = Globals.Height;
+
+        sortStates[Globals.Sort] = 1;
+
+        var svg = d3.select("#graph_top_searches"),
+            margin = {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 20
+            },
+            width = +svg.attr("width") - margin.left - margin.right,
+            textPadding = 5,
+            rowHeight = 35,
+            barHeight = 25,
+            rankWidth = 2 * width / 16,
+            categoryWidth = 4 * width / 16,
+            countWidth = 2 * width / 16,
+            percentWidth = 3 * width / 16,
+            cumPercentWidth = 5 * width / 16,
+            percBarCenter = rankWidth + categoryWidth + countWidth,
+            cumPercBarStart = rankWidth + categoryWidth + countWidth + percentWidth + 3 * textPadding + 13 * d3.max(dataInt, function(d) {
+                return d.cum_percentage.toString().length;
+            }),
+            height = (dataInt.length + 1) * rowHeight,
+            childOffset = 25,
+            triangleSpacing = 15,
+            key = function(d) {
+                return d.key;
+            };
+
+        svg.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("height", height + margin.top + margin.bottom)
+            .on("end", function(d) {
+                Globals.Height = height;
+            });
+
+        var groupEnter = svg.selectAll("g").data([dataInt]).enter();
+
+        groupEnter.append("g")
+            .attr("class", "gAll");
+
+        var gAll = svg.select(".gAll")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var percScale = d3.scaleLinear().rangeRound([0, countWidth + percentWidth - 100]);
+
+        percScale.domain([0, d3.max(dataInt, function(d) {
+            return d.cum_percentage
+        })]);
+
+        var cumPercScale = d3.scaleLinear().rangeRound([0, countWidth + percentWidth - 100]);
+
+        cumPercScale.domain([0, d3.max(dataInt, function(d) {
+            return d.cum_percentage
+        })]);
+
+        var triangle = d3.symbol().type(d3.symbolTriangle).size(20);
+
+        // Make header row //////////////////////////////////////////////////////////////////////////////
+        var headGroupEnter = gAll.selectAll(".headRow").data([dataInt]).enter();
+
+        headGroupEnter.append("g")
+            .attr("class", "headRow");
+
+        var gHead = gAll.select(".headRow")
+            .attr("transform", "translate(0,0)");
+
+        var headEnter = gHead.selectAll("rect").data([dataInt]).enter();
+
+        headEnter.append("rect")
+            .attr("class", "darkBar")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", rowHeight);
+
+        headEnter.append("text")
+            .text("Rank")
+            .attr("class", "headText")
+            .attr("transform", "translate(" + textPadding + "," + (rowHeight / 2 + textPadding) + ")");
+
+        headEnter.append("rect")
+            .attr("class", "sortRect")
+            .attr("x", (rankWidth - 2 * triangleSpacing))
+            .attr("y", 0)
+            .attr("width", 2 * triangleSpacing)
+            .attr("height", rowHeight)
+            .on("click", function(d) {
+                if (Globals.Sort == 0) {
+                    sort_search_data(1);
+                } else {
+                    sort_search_data(0);
+                }
+            });
+
+        headEnter.append("text")
+            .text("Query")
+            .attr("class", "headText")
+            .attr("transform", "translate(" + (rankWidth + textPadding) + "," + (rowHeight / 2 + textPadding) + ")");
+
+        headEnter.append("rect")
+            .attr("class", "sortRect")
+            .attr("x", (rankWidth + categoryWidth - 2 * triangleSpacing))
+            .attr("y", 0)
+            .attr("width", 2 * triangleSpacing)
+            .attr("height", rowHeight)
+            .on("click", function(d) {
+                if (Globals.Sort == 2) {
+                    sort_search_data(3);
+                } else {
+                    sort_search_data(2);
+                }
+            });
+
+        headEnter.append("text")
+            .text("Count")
+            .attr("class", "headText")
+            .attr("transform", "translate(" + (rankWidth + categoryWidth + textPadding) + "," + (rowHeight / 2 + textPadding) + ")");
+
+        headEnter.append("text")
+            .text("Percent")
+            .attr("class", "percentText")
+            .attr("transform", "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + (rowHeight / 2 + textPadding) + ")");
+
+        headEnter.append("text")
+            .text("Cumulative Percent")
+            .attr("class", "headText")
+            .attr("transform", "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth + 3 * textPadding) + "," + (rowHeight / 2 + textPadding) + ")");
+
+
+        var triangles = gHead.selectAll("path").data(sortStates);
+
+        triangles.enter().append("path")
+            .attr("d", triangle)
+            .attr("pointer-events", "none")
+            .attr("transform", function(d, i) {
+                if (i == 0) {
+                    return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
+                } else if (i == 1) {
+                    return "translate(" + (rankWidth - triangleSpacing) + "," + (rowHeight / 2 + textPadding) + ") rotate(180)";
+                } else if (i == 2) {
+                    return "translate(" + (rankWidth + categoryWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
+                } else if (i == 3) {
+                    return "translate(" + (rankWidth + categoryWidth - triangleSpacing) + "," + (rowHeight / 2 + textPadding) + ") rotate(180)";
+                }
+            })
+            .merge(triangles)
+            .transition().duration(500)
+            .attr("fill", function(d, i) {
+                if (d) {
+                    return "steelblue";
+                } else {
+                    return "lightsteelblue";
+                }
+            });
+
+        // Make data rows ////////////////////////////////////////////////////////////////////////////////
+        var dataGroup = gAll.selectAll(".dataRow").data([dataInt]);
+
+        dataGroup.enter().append("g")
+            .attr("class", "dataRow");
+
+        var dataRows = gAll.select(".dataRow")
+            .attr("transform", "translate(0,0)");
+
+        // Make background rects
+        var dataRects = dataRows.selectAll(".darkBar, .lightBar").data(dataInt, key);
+
+        dataRects.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight;
+            });
+        dataRects.exit().remove();
+        dataRects.enter().append("rect")
+            .attr("class", function(d, i) {
+                if (d.parent) {
+                    return "lightBar";
+                } else {
+                    return "darkBar";
+                }
+            })
+            .attr("x", 0)
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight;
+            })
+            .attr("width", width)
+            .attr("height", rowHeight);
+
+        // Make rank text
+        var dataRanks = dataRows.selectAll(".dataRank").data(dataInt, key);
+
+        dataRanks.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("transform", function(d, i) {
+                return "translate(" + textPadding + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            });
+        dataRanks.exit().transition().duration(500)
+            .style("opacity", .000001)
+            .remove();
+        dataRanks.enter().append("text")
+            .style("opacity", .000001)
+            .text(function(d) {
+                return d.rank;
+            })
+            .attr("class", "dataRank")
+            .attr("transform", function(d, i) {
+                return "translate(" + textPadding + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            })
+            .transition().delay(750).duration(500)
+            .style("opacity", 1);
+
+        // Make action text
+        var dataActions = dataRows.selectAll(".dataAction").data(dataInt, key);
+
+        dataActions.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            });
+        dataActions.exit().transition().duration(500)
+            .style("opacity", .000001)
+            .remove();
+        dataActions.enter().append("text")
+            .style("opacity", .000001)
+            .text(function(d) {
+                if (d.label.length > 20) {
+                    return d.label.slice(0, 20) + "...";
+                } else {
+                    return d.label;
+                }
+            })
+            .attr("class", "dataAction")
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            })
+            .transition().delay(750).duration(500)
+            .style("opacity", 1);
+
+        // Make click text
+        var dataClicks = dataRows.selectAll(".dataClick").data(dataInt, key);
+
+        dataClicks.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            });
+        dataClicks.exit().transition().duration(500)
+            .style("opacity", .000001)
+            .remove();
+        dataClicks.enter().append("text")
+            .style("opacity", .000001)
+            .text(function(d) {
+                return d.count;
+            })
+            .attr("class", "dataClick")
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            })
+            .transition().delay(750).duration(500)
+            .style("opacity", 1);
+
+        // Make percent text
+        var dataPercents = dataRows.selectAll(".dataPercent").data(dataInt, key);
+
+        dataPercents.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            });
+        dataPercents.exit().transition().duration(500)
+            .style("opacity", .000001)
+            .remove();
+        dataPercents.enter().append("text")
+            .style("opacity", .000001)
+            .text(function(d) {
+                return d.percentage + "%";
+            })
+            .attr("class", "dataPercent")
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth - textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            })
+            .transition().delay(750).duration(500)
+            .style("opacity", 1);
+
+        // Make click text
+        var dataCumPercents = dataRows.selectAll(".dataCumPercent").data(dataInt, key);
+
+        dataCumPercents.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth + 3 * textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            });
+        dataCumPercents.exit().transition().duration(500)
+            .style("opacity", .000001)
+            .remove();
+        dataCumPercents.enter().append("text")
+            .style("opacity", .000001)
+            .text(function(d) {
+                return d.cum_percentage + "%";
+            })
+            .attr("class", "dataCumPercent")
+            .attr("transform", function(d, i) {
+                return "translate(" + (rankWidth + categoryWidth + countWidth + percentWidth + 3 * textPadding) + "," + Math.floor((i + 1) * rowHeight + rowHeight / 2 + textPadding) + ")";
+            })
+            .transition().delay(750).duration(500)
+            .style("opacity", 1);
+
+        // Make perc bars
+        var percBars = dataRows.selectAll(".percBar").data(dataInt, key);
+
+        percBars.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+            });
+        percBars.exit().transition().duration(500)
+            .attr("x", percBarCenter)
+            .attr("width", 0)
+            .remove();
+        percBars.enter().append("rect")
+            .attr("class", "percBar")
+            .attr("x", function(d) {
+                return percBarCenter;
+            })
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+            })
+            .attr("width", function(d) {
+                return 0;
+            })
+            .attr("height", barHeight)
+            .transition().delay(750).duration(500)
+            .attr("x", function(d) {
+                return percBarCenter - percScale(d.percentage) / 2;
+            })
+            .attr("width", function(d) {
+                return percScale(d.percentage);
+            });
+
+        // Make cumulative perc bars
+        var cumPercBar = dataRows.selectAll(".cumPercBar").data(dataInt, key);
+
+        cumPercBar.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+            });
+        cumPercBar.exit().transition().duration(500)
+            .attr("width", 0)
+            .remove();
+        cumPercBar.enter().append("rect")
+            .attr("class", "cumPercBar")
+            .attr("x", function(d) {
+                return cumPercBarStart;
+            })
+            .attr("y", function(d, i) {
+                return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+            })
+            .attr("width", function(d) {
+                return 0;
+            })
+            .attr("height", barHeight)
+            .transition().delay(750).duration(500)
+            .attr("width", function(d) {
+                return cumPercScale(d.cum_percentage);
+            });
+
+        // Add borders ///////////////////////////////////////////////////////////////////////////////////
+        var lightBorder = gAll.selectAll(".lightBorder").data([dataInt]);
+
+        lightBorder.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("height", height);
+        lightBorder.exit().remove();
+        lightBorder.enter().append("rect")
+            .attr("class", "lightBorder")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height);;
+
+        var darkBorder = gAll.selectAll(".darkBorder").data([dataInt]);
+
+        darkBorder.transition().delay(function(d) {
+                if (oldHeight > height) {
+                    return 500;
+                } else {
+                    return 0;
+                }
+            })
+            .duration(750)
+            .attr("height", height - rowHeight);
+        darkBorder.exit().remove();
+        darkBorder.enter().append("rect")
+            .attr("class", "darkBorder")
+            .attr("x", 0)
+            .attr("y", rowHeight)
+            .attr("width", width)
+            .attr("height", height - rowHeight);
+    }
+
+    function sort_search_data(sort) {
+        var id = "#graph_top_searches";
+        console.log("Before Sort:");
+        console.log(AppStatsGlobals[id].OriginalData);
+        switch (sort) {
+            case 0: // rank asc
+                AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
+                    return d3.ascending(a.rank, b.rank);
+                });
+                break;
+            case 1: // rank desc
+                AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
+                    return d3.ascending(b.rank, a.rank);
+                });
+                break;
+            case 2: // label asc
+                AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
+                    return d3.ascending(a.label, b.label);
+                });
+                break;
+            case 3: // label desc
+                AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
+                    return d3.ascending(b.label, a.label);
+                });
+                break;
+        }
+        console.log("After Sort:");
+        console.log(AppStatsGlobals[id].OriginalData);
+
+        // Update global sort
+        AppStatsGlobals[id].Sort = sort;
+        draw_graph_top_searches();
+        // setTimeout( function(d) { draw_graph_top_searches(); }, 500);
+    }
+
+})();
