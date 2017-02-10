@@ -6,7 +6,24 @@ module QuickSearch
 
 
     ########################## ADDED #############################
-    def data
+    def data_sample
+      result = []
+      events = Event.where(date_range).limit(100)
+      searches = Search.where(date_range).limit(100)
+      sessions = Session.where(date_range).limit(100)
+
+      result[0] = events
+      result[1] = searches
+      result[2] = sessions
+
+      respond_to do |format|
+        format.json {
+          render :json => result
+        }
+      end
+    end
+
+    def data_general_statistics
       result = []
 
       clicks = Event.where(date_range).where(:action => 'click').group(:created_at_string).order("created_at_string ASC").count(:created_at_string)
@@ -150,10 +167,34 @@ module QuickSearch
                "count" => search[1],
                "percentage" => ((100.0*search[1])/total_searches).round(2),
                "cum_percentage" => (last_cum_percentage + ((100.0*search[1])/total_searches)).round(2),
-               "key" => i.to_s + search[0] + ((100.0*search[1])/total_searches).to_s}
+               "key" => search[0] + (last_cum_percentage + ((100.0*search[1])/total_searches)).to_s}
         result << row
         last_row = row
         i += 1
+      end
+
+      respond_to do |format|
+        format.json {
+          render :json => result
+        }
+      end
+    end
+
+    def data_spelling_suggestions
+      result = []
+      suggestion_serves = Event.where(:category => 'spelling-suggestion' , :action => 'serve').where(date_range).limit(100).group(:item).order('count_action DESC').count(:action)
+
+      i=1
+      suggestion_serves.each do |suggestion|
+        clicks = Event.where(:category => 'spelling-suggestion' , :action => 'click' , :item => suggestion[0]).where(date_range).count(:action)
+        row = {"rank" => i,
+               "label" => suggestion[0],
+               "serves" => suggestion[1],
+               "clicks" =>  clicks,
+               "ratio" => (100.0*clicks/suggestion[1]).round(2),
+               "key" => i.to_s + suggestion[0] + (100.0*clicks/suggestion[1]).to_s}
+        result << row
+        i+=1
       end
 
       respond_to do |format|

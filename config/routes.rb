@@ -27,11 +27,14 @@ QuickSearch::Engine.routes.draw do
 
   ########################## ADDED #############################
 
-  get 'appstats/data', :defaults => { :format => 'json' }
+  get 'appstats/data_sample', :defaults => { :format => 'json' }
+  get 'appstats/data_general_statistics', :defaults => { :format => 'json' }
   get 'appstats/data_module_clicks', :defaults => { :format => 'json' }
   get 'appstats/data_result_clicks', :defaults => { :format => 'json' }
   get 'appstats/data_module_details', :defaults => { :format => 'json' }
   get 'appstats/data_top_searches', :defaults => { :format => 'json' }
+  get 'appstats/data_spelling_suggestions', :defaults => { :format => 'json' }
+
 
   ##############################################################
 
