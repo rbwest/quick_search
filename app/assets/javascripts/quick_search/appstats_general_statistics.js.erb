@@ -3,7 +3,7 @@
     AppStatsGlobals["#graph_general_statistics"] = {};
 
     $(document).on("turbolinks:load", function() {
-        if ($("#graph_line").length) {
+        if ($("#graph_general_statistics").length) {
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
