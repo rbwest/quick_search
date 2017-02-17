@@ -16,6 +16,7 @@ module QuickSearch
       result[1] = searches
       result[2] = sessions
 
+
       respond_to do |format|
         format.json {
           render :json => result

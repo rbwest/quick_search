@@ -16,7 +16,7 @@
                     AppStatsGlobals["#graph_module_clicks"].Data = moduleData;
                     AppStatsGlobals["#graph_module_clicks"].Height = 450;
                     AppStatsGlobals["#graph_module_clicks"].Sort = 0;
-                    draw_graph_table("#graph_module_clicks");
+                    draw_graph_clicks_overview("#graph_module_clicks");
                 },
                 error: function(result) {
                     error();
@@ -35,7 +35,7 @@
                     AppStatsGlobals["#graph_result_clicks"].Data = resultData;
                     AppStatsGlobals["#graph_result_clicks"].Sort = 0;
                     AppStatsGlobals["#graph_result_clicks"].Height = 450;
-                    draw_graph_table("#graph_result_clicks");
+                    draw_graph_clicks_overview("#graph_result_clicks");
                 },
                 error: function(result) {
                     error();
@@ -48,7 +48,7 @@
         console.log("Error retrieving data");
     }
 
-    function draw_graph_table(id) {
+    function draw_graph_clicks_overview(id) {
         var Globals = AppStatsGlobals[id],
             sortStates = [0, 0, 0, 0]
         dataInt = Globals.Data,
@@ -139,9 +139,9 @@
             .attr("height", rowHeight)
             .on("click", function(d) {
                 if (Globals.Sort == 0) {
-                    sort_table_data(id, 1);
+                    sort_clicks_overview(id, 1);
                 } else {
-                    sort_table_data(id, 0);
+                    sort_clicks_overview(id, 0);
                 }
             });
 
@@ -164,9 +164,9 @@
             .attr("height", rowHeight)
             .on("click", function(d) {
                 if (Globals.Sort == 2) {
-                    sort_table_data(id, 3);
+                    sort_clicks_overview(id, 3);
                 } else {
-                    sort_table_data(id, 2);
+                    sort_clicks_overview(id, 2);
                 }
             });
 
@@ -515,7 +515,7 @@
                 updateData = _.concat(_.slice(updateData, 0, index + 1), detailData, _.slice(updateData, index + 1, updateData.length));
 
                 AppStatsGlobals[id].Data = updateData;
-                draw_graph_table(id);
+                draw_graph_clicks_overview(id);
             },
             error: function(result) {
                 error();
@@ -538,10 +538,10 @@
         console.log(updateData);
 
         AppStatsGlobals[id].Data = updateData;
-        draw_graph_table(id);
+        draw_graph_clicks_overview(id);
     }
 
-    function sort_table_data(id, sort) {
+    function sort_clicks_overview(id, sort) {
         if (AppStatsGlobals[id].Data.length != AppStatsGlobals[id].OriginalData.length) { // If details are present, those must be removed first
             // Go back to original data set (no details)
             switch (AppStatsGlobals[id].Sort) {
@@ -574,7 +574,7 @@
                         AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
                             return d3.ascending(a.rank, b.rank);
                         });
-                        draw_graph_table(id);
+                        draw_graph_clicks_overview(id);
                     }, 750);
                     break;
                 case 1: // rank desc
@@ -582,7 +582,7 @@
                         AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
                             return d3.ascending(b.rank, a.rank);
                         });
-                        draw_graph_table(id);
+                        draw_graph_clicks_overview(id);
                     }, 750);
                     break;
                 case 2: // label asc
@@ -590,7 +590,7 @@
                         AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
                             return d3.ascending(a.label, b.label);
                         });
-                        draw_graph_table(id);
+                        draw_graph_clicks_overview(id);
                     }, 750);
                     break;
                 case 3: // label desc
@@ -598,7 +598,7 @@
                         AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
                             return d3.ascending(b.label, a.label);
                         });
-                        draw_graph_table(id);
+                        draw_graph_clicks_overview(id);
                     }, 750);
                     break;
             }
@@ -629,7 +629,7 @@
 
         // Update global sort
         AppStatsGlobals[id].Sort = sort;
-        draw_graph_table(id);
+        draw_graph_clicks_overview(id);
     }
 
 })();

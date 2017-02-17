@@ -1,0 +1,56 @@
+<style>
+.percBar, .cumPercBar {
+	fill: steelblue;
+}
+.percBar:hover,  .cumPercBar:hover{
+	fill: lightsteelblue;
+}
+
+.sortRect {
+	cursor: pointer;
+	opacity: 0.000001;
+}
+
+.headText, .percentText, .dataRank, .dataAction, .dataClick, .dataPercent, .dataCumPercent {
+	text-anchor: start;
+	fill: 	#000000;
+	font-size: 13px;
+	font-family: "Lucida Console";
+}
+
+.dataAction {
+	cursor: pointer;
+}
+
+.percentText, .dataPercent {
+	text-anchor: end;
+}
+
+.headText, .percentText {
+	font-size: 16px;
+}
+
+.darkBorder {
+	fill: none;
+	stroke-width: 2px;
+	stroke: #333;
+}
+
+.lightBorder {
+	fill: none;
+	stroke-width: 2px;
+	stroke: #DDD;
+}
+
+.darkBar {
+	fill: #F5F5F5;
+	stroke-width: 1px;
+	stroke: #DDD;
+}
+
+.lightBar {
+	fill: none;
+}
+</style>
+
+<svg id="graph_best_bets" width="800" height="800"></svg>

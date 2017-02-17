@@ -9,12 +9,10 @@
         <h2>Module Clicks</h2>
         <%= render partial: 'click_count_table', locals: { :clicks => @module_clicks, :total_clicks => @module_click_total} %>
 
-        <%= render partial: 'graph_module_clicks' %>
-
         <h2>Result Types Guide Clicks</h2>
         <%= render partial: 'click_count_table', locals: { :clicks => @result_types_clicks, :total_clicks => @result_types_click_total} %>
 
-        <%= render partial: 'graph_result_clicks' %>
+        <%= render partial: 'graph_clicks_overview' %>
 
         <table>
             <tr>

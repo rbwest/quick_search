@@ -1,25 +1,25 @@
 <style>
-.dataBar {
+.percBar, .cumPercBar {
 	fill: steelblue;
 }
-.dataBar:hover {
-	fill: lightsteelblue;
-}
-
-.lightDataBar {
+.percBar:hover,  .cumPercBar:hover{
 	fill: lightsteelblue;
 }
 
 .sortRect {
-	opacity: 0.000001;
 	cursor: pointer;
+	opacity: 0.000001;
 }
 
-.headText, .percentText, .dataRank, .dataAction, .dataClick, .dataPercent {
+.headText, .percentText, .dataRank, .dataAction, .dataClick, .dataPercent, .dataCumPercent {
 	text-anchor: start;
 	fill: 	#000000;
 	font-size: 13px;
 	font-family: "Lucida Console";
+}
+
+.dataAction {
+	cursor: pointer;
 }
 
 .percentText, .dataPercent {
@@ -53,4 +53,4 @@
 }
 </style>
 
-<svg id="graph_result_clicks" width="800" height="450"></svg>
+<svg id="graph_spelling_suggestions" width="800" height="800"></svg>
