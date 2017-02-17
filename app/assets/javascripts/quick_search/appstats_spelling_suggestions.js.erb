@@ -1,9 +1,11 @@
 (function() {
     var AppStatsGlobals = {};
-    AppStatsGlobals["#graph_top_searches"] = {};
+    AppStatsGlobals["#graph_spelling_suggestions"] = {};
+    console.log("IN appstats_spelling_suggestions");
 
     $(document).on("turbolinks:load", function() {
-        if ($("#graph_top_searches").length) {
+        if ($("#graph_spelling_suggestions").length) {
+            console.log("IN load of appstats_spelling_suggestions");
             $.ajax({
                 type: "GET",
                 contentType: "application/json; charset=utf-8",
@@ -11,11 +13,11 @@
                 dataType: "json",
                 success: function(searchDataSet) {
                     var searchData = _.cloneDeep(searchDataSet);
-                    AppStatsGlobals["#graph_top_searches"].OriginalData = searchData;
-                    AppStatsGlobals["#graph_top_searches"].Data = searchData;
-                    AppStatsGlobals["#graph_top_searches"].Sort = 0;
-                    AppStatsGlobals["#graph_top_searches"].Height = 450;
-                    draw_graph_top_searches();
+                    AppStatsGlobals["#graph_spelling_suggestions"].OriginalData = searchData;
+                    AppStatsGlobals["#graph_spelling_suggestions"].Data = searchData;
+                    AppStatsGlobals["#graph_spelling_suggestions"].Sort = 0;
+                    AppStatsGlobals["#graph_spelling_suggestions"].Height = 450;
+                    draw_graph_spelling_suggestions();
                 },
                 error: function(result) {
                     error();
@@ -28,15 +30,15 @@
         console.log("Error retrieving data");
     }
 
-    function draw_graph_top_searches() {
-        var Globals = AppStatsGlobals["#graph_top_searches"],
+    function draw_graph_spelling_suggestions() {
+        var Globals = AppStatsGlobals["#graph_spelling_suggestions"],
             sortStates = [0, 0, 0, 0]
-        dataInt = Globals.Data,
+            dataInt = Globals.Data,
             oldHeight = Globals.Height;
 
         sortStates[Globals.Sort] = 1;
 
-        var svg = d3.select("#graph_top_searches"),
+        var svg = d3.select("#graph_spelling_suggestions"),
             margin = {
                 top: 20,
                 right: 20,
@@ -497,7 +499,7 @@
     }
 
     function sort_search_data(sort) {
-        var id = "#graph_top_searches";
+        var id = "#graph_spelling_suggestions";
         console.log("Before Sort:");
         console.log(AppStatsGlobals[id].OriginalData);
         switch (sort) {

@@ -10,5 +10,13 @@
         <% @top_spot_reporting.each do |report| %>
             <%= render partial: 'top_spot_report_table', locals: { report: report } %>
         <% end %>
+
+        <% if @page_title=='spelling-suggestion' %> 
+            <%= render partial: 'graph_spelling_suggestions' %>
+        <% end %>
+
+        <% if @page_title=='best-bets-regular' %> 
+            <%= render partial: 'graph_best_bets' %>
+        <% end %>
     </div>
 </div>

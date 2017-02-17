@@ -1,6 +1,6 @@
 (function() {
     var AppStatsGlobals = {};
-    AppStatsGlobals["#graph_line"] = {};
+    AppStatsGlobals["#graph_general_statistics"] = {};
 
     $(document).on("turbolinks:load", function() {
         if ($("#graph_line").length) {
@@ -13,7 +13,7 @@
                     var dataMain = _.cloneDeep(sampleDataSet);
                     var dataMini = _.cloneDeep(sampleDataSet);
 
-                    draw_graph_line(dataMain, false, 0);
+                    draw_graph_general_statistics(dataMain, false, 0);
 
                     draw_graph_mini(dataMini[0], "#mini0");
                     document.getElementById("mini0").addEventListener("click", function() {
@@ -67,10 +67,10 @@
         console.log("Error retrieving data");
     }
 
-    function draw_graph_line(dataShared, transitioning, index) {
+    function draw_graph_general_statistics(dataShared, transitioning, index) {
         var transitioning = transitioning;
-        var Globals = AppStatsGlobals["#graph_line"],
-            svg = d3.select("#graph_line"),
+        var Globals = AppStatsGlobals["#graph_general_statistics"],
+            svg = d3.select("#graph_general_statistics"),
             dataInt = dataShared[index],
             margin = {
                 top: 20,
@@ -336,7 +336,7 @@
             dataType: "json",
             success: function(updateDataSet) {
                 var updateData = _.cloneDeep(updateDataSet);
-                draw_graph_line(updateData, true, index);
+                draw_graph_general_statistics(updateData, true, index);
             },
             error: function(result) {
                 error();
