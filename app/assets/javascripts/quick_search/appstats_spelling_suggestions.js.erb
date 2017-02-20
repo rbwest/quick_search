@@ -31,7 +31,11 @@
 
     function draw_graph_spelling_suggestions() {
         var Globals = AppStatsGlobals["#graph_spelling_suggestions"],
+<<<<<<< HEAD
             sortStates = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+=======
+            sortStates = [0, 0, 0, 0, 0, 0, 0, 0]
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
             dataInt = Globals.Data,
             oldHeight = Globals.Height;
 
@@ -89,19 +93,31 @@
         var gAll = svg.select(".gAll")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+<<<<<<< HEAD
         var serveScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth - serveBarStart - triangleSpacing]);
+=======
+        var serveScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth - serveBarStart]);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
 
         serveScale.domain([0, d3.max(dataInt, function(d) {
             return d.serves;
         })]);
 
+<<<<<<< HEAD
         var clickScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth + clickWidth - clickBarStart - triangleSpacing]);
+=======
+        var clickScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth + clickWidth - clickBarStart]);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
 
         clickScale.domain([0, d3.max(dataInt, function(d) {
             return d.clicks;
         })]);
 
+<<<<<<< HEAD
         var ratioScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth + clickWidth + ratioWidth - ratioBarStart - triangleSpacing]);
+=======
+        var ratioScale = d3.scaleLinear().rangeRound([0, rankWidth + categoryWidth + serveWidth + clickWidth + ratioWidth - ratioBarStart]);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
 
         ratioScale.domain([0, d3.max(dataInt, function(d) {
             return d.ratio;
@@ -221,10 +237,17 @@
             .attr("width", 2 * triangleSpacing)
             .attr("height", rowHeight)
             .on("click", function(d) {
+<<<<<<< HEAD
                 if (Globals.Sort == 8) {
                     sort_search_data(9);
                 } else {
                     sort_search_data(8);
+=======
+                if (Globals.Sort == 2) {
+                    sort_search_data(3);
+                } else {
+                    sort_search_data(2);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
                 }
             });
 
@@ -247,6 +270,7 @@
                     return "translate(" + (rankWidth + categoryWidth + serveWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
                 } else if (i == 5) {
                     return "translate(" + (rankWidth + categoryWidth + serveWidth - triangleSpacing) + "," + (rowHeight / 2 + textPadding) + ") rotate(180)";
+<<<<<<< HEAD
                 } else if (i == 6) {
                     return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
                 } else if (i == 7) {
@@ -254,6 +278,15 @@
                 } else if (i == 8) {
                     return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth + ratioWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
                 } else if (i == 9) {
+=======
+                } else if (i == 4) {
+                    return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
+                } else if (i == 5) {
+                    return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth - triangleSpacing) + "," + (rowHeight / 2 + textPadding) + ") rotate(180)";
+                } else if (i == 6) {
+                    return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth + ratioWidth - triangleSpacing) + "," + (rowHeight / 2 - textPadding) + ")";
+                } else if (i == 7) {
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
                     return "translate(" + (rankWidth + categoryWidth + serveWidth + clickWidth + ratioWidth - triangleSpacing) + "," + (rowHeight / 2 + textPadding) + ") rotate(180)";
                 }
             })
@@ -449,6 +482,7 @@
             .transition().delay(750).duration(500)
             .style("opacity", 1);
 
+<<<<<<< HEAD
         // Make serve bars
         var serveBar = dataRows.selectAll(".serveBar").data(dataInt, key);
 
@@ -550,6 +584,80 @@
             .attr("width", function(d) {
                 return ratioScale(d.ratio);
             });
+=======
+
+        // // Make perc bars
+        // var percBars = dataRows.selectAll(".percBar").data(dataInt, key);
+
+        // percBars.transition().delay(function(d) {
+        //         if (oldHeight > height) {
+        //             return 500;
+        //         } else {
+        //             return 0;
+        //         }
+        //     })
+        //     .duration(750)
+        //     .attr("y", function(d, i) {
+        //         return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+        //     });
+        // percBars.exit().transition().duration(500)
+        //     .attr("x", percBarCenter)
+        //     .attr("width", 0)
+        //     .remove();
+        // percBars.enter().append("rect")
+        //     .attr("class", "percBar")
+        //     .attr("x", function(d) {
+        //         return percBarCenter;
+        //     })
+        //     .attr("y", function(d, i) {
+        //         return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+        //     })
+        //     .attr("width", function(d) {
+        //         return 0;
+        //     })
+        //     .attr("height", barHeight)
+        //     .transition().delay(750).duration(500)
+        //     .attr("x", function(d) {
+        //         return percBarCenter - percScale(d.percentage) / 2;
+        //     })
+        //     .attr("width", function(d) {
+        //         return percScale(d.percentage);
+        //     });
+
+        // // Make cumulative perc bars
+        // var cumPercBar = dataRows.selectAll(".cumPercBar").data(dataInt, key);
+
+        // cumPercBar.transition().delay(function(d) {
+        //         if (oldHeight > height) {
+        //             return 500;
+        //         } else {
+        //             return 0;
+        //         }
+        //     })
+        //     .duration(750)
+        //     .attr("y", function(d, i) {
+        //         return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+        //     });
+        // cumPercBar.exit().transition().duration(500)
+        //     .attr("width", 0)
+        //     .remove();
+        // cumPercBar.enter().append("rect")
+        //     .attr("class", "cumPercBar")
+        //     .attr("x", function(d) {
+        //         return cumPercBarStart;
+        //     })
+        //     .attr("y", function(d, i) {
+        //         return (i + 1) * rowHeight + (rowHeight - barHeight) / 2;
+        //     })
+        //     .attr("width", function(d) {
+        //         return 0;
+        //     })
+        //     .attr("height", barHeight)
+        //     .transition().delay(750).duration(500)
+        //     .attr("width", function(d) {
+        //         return cumPercScale(d.cum_percentage);
+        //     });
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
 
         // Add borders ///////////////////////////////////////////////////////////////////////////////////
         var lightBorder = gAll.selectAll(".lightBorder").data([dataInt]);
@@ -593,6 +701,11 @@
 
     function sort_search_data(sort) {
         var id = "#graph_spelling_suggestions";
+<<<<<<< HEAD
+=======
+        console.log("Before Sort:");
+        console.log(AppStatsGlobals[id].OriginalData);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
         switch (sort) {
             case 0: // rank asc
                 AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
@@ -614,6 +727,7 @@
                     return d3.ascending(b.label, a.label);
                 });
                 break;
+<<<<<<< HEAD
             case 4: // rank asc
                 AppStatsGlobals[id].Data = AppStatsGlobals[id].OriginalData.sort(function(a, b) {
                     return d3.ascending(a.serves, b.serves);
@@ -660,6 +774,11 @@
                 case 9: return d3.ascending(b.rank,a.rank);
             }
         });
+=======
+        }
+        console.log("After Sort:");
+        console.log(AppStatsGlobals[id].OriginalData);
+>>>>>>> f2244716f59a5ca79bd5e269c5c27230878d1b4d
 
         // Update global sort
         AppStatsGlobals[id].Sort = sort;
