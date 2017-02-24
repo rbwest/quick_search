@@ -370,7 +370,10 @@ module QuickSearch
           @start_date = start
         end
       end
-
+      puts("\n\n")
+      puts(@start_date)
+      puts("\n\n")
+      return @start_date
     end
 
     def end_date
@@ -381,6 +384,10 @@ module QuickSearch
         # otherwise use the current date as default
         @end_date = Time.current
       end
+      puts("\n\n")
+      puts(@end_date)
+      puts("\n\n")
+      return @end_date
     end
 
     def convert_to_time(date_input)
@@ -404,6 +411,9 @@ module QuickSearch
 
     def date_range
       { :created_at => start_date.beginning_of_day..end_date.end_of_day }
+      puts("\n\n")
+      puts({ :created_at => start_date.beginning_of_day..end_date.end_of_day })
+      puts("\n\n")
     end
 
   end
